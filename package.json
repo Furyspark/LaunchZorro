@@ -1,0 +1,11 @@
+{
+  "name": "launch-zorro",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "test": "node compile.js"
+  },
+  "devDependencies": {
+    "concat": "^1.0.0"
+  }
+}

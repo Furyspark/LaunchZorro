@@ -1,0 +1,6 @@
+[
+  "src/core.js",
+  "src/categories.js",
+  "src/profiles.js",
+  "src/audio.js"
+]
