@@ -3,9 +3,9 @@
   "main": "main.js",
   "private": true,
   "scripts": {
-    "test": "node compile.js"
+    "test": "node compile.js & electron ."
   },
   "devDependencies": {
-    "concat": "^1.0.0"
+    "concatenate-files": "^0.1.1"
   }
 }
