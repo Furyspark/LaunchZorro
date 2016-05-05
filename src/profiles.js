@@ -85,6 +85,7 @@ $Profiles.setProfileInfo = function(name) {
 };
 
 $Profiles.launchCapsF13 = function() {
+  console.log("CapsF13");
   var sub = this.subProfiles["capsf13"];
   if(sub) sub.kill();
   sub = spawn("CapsF13.exe", [], {shell: false, cwd: "profiler"});

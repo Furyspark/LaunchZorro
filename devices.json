@@ -25,6 +25,14 @@
     {
       "name": "G600",
       "dirName": "g600"
+    },
+    {
+      "name": "Nyth",
+      "dirName": "nyth"
+    },
+    {
+      "name": "Scimitar",
+      "dirName": "scimitar"
     }
   ]
 }

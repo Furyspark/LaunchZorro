@@ -141,6 +141,31 @@ $Core.refreshProfiles = function() {
   $Profiles.refresh();
   $Audio.play("refresh");
 };
+
+$Core.detectRunning = function() {
+  var tasklist = spawn("tasklist");
+  var taskStr = "";
+  tasklist.stdout.on("data", function(data) {
+    taskStr += data.toString();
+  });
+  tasklist.stdout.on("end", function() {
+    var tasks = taskStr.split(/[\n\r]+/);
+    tasks = $Core.parseTasks(tasks.slice(4));
+  });
+}
+
+$Core.parseTasks = function(tasks) {
+  var result = [];
+  for(var a = 0;a < tasks.length;a++) {
+    var task = tasks[a];
+    var taskDetails = task.split(/[ ]+/);
+    var obj = {
+      exe: taskDetails[0]
+    };
+    result.push(obj);
+  }
+  return result;
+}
 var $Categories = {};
 
 $Categories.clear = function() {
@@ -278,6 +303,7 @@ $Profiles.setProfileInfo = function(name) {
 };
 
 $Profiles.launchCapsF13 = function() {
+  console.log("CapsF13");
   var sub = this.subProfiles["capsf13"];
   if(sub) sub.kill();
   sub = spawn("CapsF13.exe", [], {shell: false, cwd: "profiler"});
