@@ -183,12 +183,15 @@ $Categories.add = function(name) {
 };
 
 $Categories.refresh = function() {
+  var selected = this.getSelected();
+  if(selected) selected = selected.value;
   this.clear();
   var cats = this.getCategoryDirectories();
   for(var a = 0;a < cats.length;a++) {
     var cat = cats[a];
     this.add(cat);
   }
+  if(selected) this.select(selected);
 };
 
 $Categories.getCategoryDirectories = function() {
@@ -216,6 +219,16 @@ $Categories.baseDir = function() {
 $Categories.onSelect = function() {
   $Profiles.refresh();
 };
+
+$Categories.select = function(value) {
+  var nodes = this.getElement().childNodes;
+  for(var a = 0;a < nodes.length;a++) {
+    var node = nodes[a];
+    if(node.value === value) {
+      node.selected = true;
+    }
+  }
+}
 var $Profiles = {};
 
 $Profiles.profile = null;
@@ -237,12 +250,15 @@ $Profiles.add = function(name) {
 };
 
 $Profiles.refresh = function() {
+  var selected = this.getSelected();
+  if(selected) selected = selected.value;
   this.clear();
   var group = this.getProfiles();
   for(var a = 0;a < group.length;a++) {
     var item = group[a];
     this.add(item);
   }
+  if(selected) this.select(selected);
 };
 
 $Profiles.getProfiles = function() {
@@ -268,6 +284,16 @@ $Profiles.getSelected = function() {
   var parent = this.getElement();
   return parent.options[parent.selectedIndex];
 };
+
+$Profiles.select = function(value) {
+  var nodes = this.getElement().childNodes;
+  for(var a = 0;a < nodes.length;a++) {
+    var node = nodes[a];
+    if(node.value === value) {
+      node.selected = true;
+    }
+  }
+}
 
 $Profiles.baseDir = function() {
   var mouseDir = $Core.devices.mice[$Core.MouseElement().value].dirName;

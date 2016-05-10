@@ -15,12 +15,15 @@ $Categories.add = function(name) {
 };
 
 $Categories.refresh = function() {
+  var selected = this.getSelected();
+  if(selected) selected = selected.value;
   this.clear();
   var cats = this.getCategoryDirectories();
   for(var a = 0;a < cats.length;a++) {
     var cat = cats[a];
     this.add(cat);
   }
+  if(selected) this.select(selected);
 };
 
 $Categories.getCategoryDirectories = function() {
@@ -48,3 +51,13 @@ $Categories.baseDir = function() {
 $Categories.onSelect = function() {
   $Profiles.refresh();
 };
+
+$Categories.select = function(value) {
+  var nodes = this.getElement().childNodes;
+  for(var a = 0;a < nodes.length;a++) {
+    var node = nodes[a];
+    if(node.value === value) {
+      node.selected = true;
+    }
+  }
+}

@@ -19,12 +19,15 @@ $Profiles.add = function(name) {
 };
 
 $Profiles.refresh = function() {
+  var selected = this.getSelected();
+  if(selected) selected = selected.value;
   this.clear();
   var group = this.getProfiles();
   for(var a = 0;a < group.length;a++) {
     var item = group[a];
     this.add(item);
   }
+  if(selected) this.select(selected);
 };
 
 $Profiles.getProfiles = function() {
@@ -50,6 +53,16 @@ $Profiles.getSelected = function() {
   var parent = this.getElement();
   return parent.options[parent.selectedIndex];
 };
+
+$Profiles.select = function(value) {
+  var nodes = this.getElement().childNodes;
+  for(var a = 0;a < nodes.length;a++) {
+    var node = nodes[a];
+    if(node.value === value) {
+      node.selected = true;
+    }
+  }
+}
 
 $Profiles.baseDir = function() {
   var mouseDir = $Core.devices.mice[$Core.MouseElement().value].dirName;

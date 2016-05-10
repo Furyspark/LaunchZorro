@@ -1,5 +1,5 @@
 body {
-  background-color: #343434;
+  background-color: #aaaaaa;
   margin: 0;
   display: inline;
 }
@@ -9,7 +9,7 @@ body {
   display: flex;
   padding: 4px;
   margin: 4px;
-  border: 1px solid black;
+  border: 1px solid #606060;
 }
 
 #group_device {
@@ -55,6 +55,11 @@ select {
 }
 
 button {
+  width: 128px;
+  height: 24px;
+}
+
+/*button {
   background: #3498db;
   background-image: -webkit-linear-gradient(top, #3498db, #2980b9);
   background-image: -moz-linear-gradient(top, #3498db, #2980b9);
@@ -85,4 +90,4 @@ button:hover {
 
 button.normal {
   width: 128px;
-}
+}*/
