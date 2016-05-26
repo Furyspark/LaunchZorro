@@ -1,3 +1,8 @@
 {
-  "autocapsf13": true
+  "autocapsf13": true,
+  "suspend_key": "f1",
+  "ptt": {
+    "origin": "capslock",
+    "key": "scrolllock"
+  }
 }

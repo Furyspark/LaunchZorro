@@ -2,6 +2,7 @@ var fs = require("fs");
 var path = require("path");
 var spawn = require("child_process").spawn;
 var exec = require("child_process").execFile;
+var interceptionJS = require("./interception/interception");
 
 var $Core = {};
 
@@ -15,6 +16,8 @@ window.onload = function() {
   $Audio.addSound("reload", "assets/audio/profiler_reload.wav");
   $Audio.addSound("unload", "assets/audio/profiler_unload.wav");
   $Audio.addSound("refresh", "assets/audio/profiler_refresh.wav");
+  $Audio.addSound("activate_profile", "assets/audio/activate_profile.wav");
+  $Audio.addSound("deactivate_profile", "assets/audio/deactivate_profile.wav");
   $Core.start();
   // Load conf.json
   var xhr = new XMLHttpRequest();
@@ -65,13 +68,16 @@ $Core.start = function() {
     }
   }
 
+  $Core.handler = new interceptionJS();
+  $Core.handler.start($Core.handleInterception.bind($Core));
+
   $Categories.refresh();
 };
 
 $Core.onConfLoaded = function() {
   var conf = $Core.conf;
   if(conf.autocapsf13) {
-    $Profiles.launchCapsF13();
+    // $Profiles.launchCapsF13();
   }
 };
 
@@ -125,7 +131,7 @@ $Core.addRadioButton = function(parentId, key, groupKey, text) {
 
 $Core.unloadProfile = function() {
   if($Profiles.profile) {
-    $Profiles.profile.kill();
+    $Profiles.closeProfile();
     $Profiles.setProfileInfo("N/A");
   }
   $Audio.play("unload");
@@ -152,6 +158,23 @@ $Core.detectRunning = function() {
     var tasks = taskStr.split(/[\n\r]+/);
     tasks = $Core.parseTasks(tasks.slice(4));
   });
+}
+
+$Core.handleInterception = function(keyCode, keyDown, keyE0, hwid) {
+  var keyName = Input.indexToString(keyCode, keyE0);
+
+  if(this.conf && this.conf.ptt && this.conf.ptt.origin && keyName === this.conf.ptt.origin) {
+    this.handler.send(this.conf.ptt.key, keyDown);
+  }
+  else {
+    var prof = $Profiles.profile;
+    if(prof) {
+      prof.handleInterception(keyCode, keyDown, keyE0, hwid, keyName);
+    }
+    else {
+      this.handler.send_default();
+    }
+  }
 }
 
 $Core.parseTasks = function(tasks) {

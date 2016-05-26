@@ -85,12 +85,24 @@ $Profiles.loadProfile = function() {
     var profileName = selected.value;
     this.setProfileInfo(profileName);
     var profilePath = this.baseDir() + profileName + ".json";
-    if(this.profile) {
-      this.profile.kill();
-    }
-    this.profile = spawn("Profiler_Test.exe", ["../" + profilePath], {shell: false, cwd: "profiler"});
+
+    this.closeProfile();
+
+    this.profile = new Profile(profilePath);
+
+    // if(this.profile) {
+    //   this.profile.kill();
+    // }
+    // this.profile = spawn("Profiler_Test.exe", ["../" + profilePath], {shell: false, cwd: "profiler"});
   }
 };
+
+$Profiles.closeProfile = function() {
+  if(this.profile) {
+    this.profile.remove();
+    this.profile = null;
+  }
+}
 
 $Profiles.setProfileInfo = function(name) {
   var elem = document.getElementById("info_current_profile");
