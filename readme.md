@@ -1,5 +1,5 @@
 # LaunchZorro
-A JS/Electron-based keyboard profile executor using the Interception Driver (http://www.oblita.com/interception.html).
+A JS/Electron-based keyboard profile executor using the Interception Driver (http://www.oblita.com/interception.html). Currently only supports 64-bit Windows.
 
 ## Related
 EditZorro(https://github.com/MikauSchekzen/EditZorro)
