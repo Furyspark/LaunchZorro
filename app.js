@@ -996,7 +996,7 @@ Profile.prototype.getBind = function(keyName) {
 }
 
 Profile.prototype.pressBind = function(bind) {
-  this._held[bind.origin] = { keymap: this.keymapIndex() };
+  if(!this._held[bind.origin]) this._held[bind.origin] = { keymap: this.keymapIndex() };
   bind.press();
 }
 
@@ -1019,7 +1019,7 @@ Profile.prototype.keymapIndex = function() {
 }
 
 Profile.prototype.switchKeymap = function(value) {
-  this._keymapIndex = value;
+  if(this._keymapIndex !== value) this._keymapIndex = value;
 }
 
 Profile.prototype.suspended = function() {
