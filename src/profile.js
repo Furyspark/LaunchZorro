@@ -57,7 +57,14 @@ Profile.prototype.source = function() {
   return this._source;
 }
 
+Profile.prototype.options = function() {
+  return this.source().options;
+}
+
 Profile.prototype.handleInterception = function(keyCode, keyDown, keyE0, hwid, keyName) {
+  var options = this.options();
+  var coreOptions = $Core.options();
+
   if(keyName == $Core.conf.suspend_key) {
     if(keyDown) this.toggleSuspend();
   }
@@ -67,23 +74,18 @@ Profile.prototype.handleInterception = function(keyCode, keyDown, keyE0, hwid, k
     }
     else {
       var onWhitelist = this.usingWhitelist() ? this.checkWhitelist(hwid) : true;
-      if(onWhitelist) {
+      var bind = this.getBind(keyName);
+      if(onWhitelist && bind) {
         // Key DOWN
         if(keyDown) {
-          var bind = this.getBind(keyName);
-          if(bind) {
-            this.pressBind(bind);
-          }
+          this.pressBind(bind);
         }
         // Key UP
         else {
-          var bind = this.getBind(keyName);
-          if(bind) {
-            this.releaseBind(bind);
-          }
+          this.releaseBind(bind);
         }
       }
-      else {
+      else if((options && (options.enableDefaults || coreOptions.enableDefaults) && !bind) || !onWhitelist) {
         this.core().send_default();
       }
     }

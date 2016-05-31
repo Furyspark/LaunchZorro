@@ -189,3 +189,9 @@ $Core.parseTasks = function(tasks) {
   }
   return result;
 }
+
+$Core.options = function() {
+  return {
+    enableDefaults: document.getElementById("profile-enable-defaults").checked
+  };
+}
