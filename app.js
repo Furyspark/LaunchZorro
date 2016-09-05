@@ -1022,6 +1022,7 @@ Profile.prototype.handleInterception = function(keyCode, keyDown, keyE0, hwid, k
     }
     else {
       var onWhitelist = this.usingWhitelist() ? this.checkWhitelist(hwid) : true;
+      if(!onWhitelist) console.log(hwid);
       var bind = this.getBind(keyName);
       if(onWhitelist && bind) {
         // Key DOWN
