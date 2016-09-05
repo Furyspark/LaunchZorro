@@ -4,5 +4,8 @@
   "private": true,
   "scripts": {
     "test": "node compile.js & electron ."
+  },
+  "devDependencies": {
+    "concatenate-files": "^0.1.1"
   }
 }
