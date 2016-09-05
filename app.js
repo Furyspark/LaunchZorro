@@ -992,7 +992,7 @@ Profile.prototype.handleInterception = function(keyCode, keyDown, keyE0, hwid, k
     if(keyDown) this.toggleSuspend();
   }
   else {
-    if(this.suspended()) {
+    if(this.suspended() || deviceType === $Core.DEVICE_TYPE_MOUSE) {
       this.core().send_default();
     }
     else {
