@@ -1,6 +1,5 @@
 LaunchZorro*/
-output
-output2
+bin
 node_modules
 .atom-build.json
 app.js

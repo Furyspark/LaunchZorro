@@ -6,6 +6,8 @@
     "test": "node compile.js & electron ."
   },
   "devDependencies": {
-    "concatenate-files": "^0.1.1"
+    "concatenate-files": "^0.1.1",
+    "electron-packager": "^8.0.0",
+    "electron-prebuilt": "^1.3.5"
   }
 }
