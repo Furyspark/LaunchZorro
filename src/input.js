@@ -90,3 +90,28 @@ Input.indexToString = function(index, e0) {
     case 88: return "f12"; break;
   }
 }
+
+Input.mouseIndexToString = function(index) {
+  switch(index) {
+    case 1:
+    case 2:
+      return "mousebuttonleft";
+      break;
+    case 4:
+    case 8:
+      return "mousebuttonright";
+      break;
+    case 16:
+    case 32:
+      return "mousebuttonmiddle";
+      break;
+    case 64:
+    case 128:
+      return "mousebutton4";
+      break;
+    case 256:
+    case 512:
+      return "mousebutton5";
+      break;
+  }
+}
