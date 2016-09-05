@@ -70,6 +70,10 @@ Sequence.prototype.continue = function() {
     var details = action.get();
     switch(details.type) {
       case "key":
+        // Mouse wheel
+        if(details.name === "mousewheelup") this.core().send("mousewheel", true, 0, 120);
+        else if(details.name === "mousewheeldown") this.core().send("mousewheel", true, 0, -120);
+        // Keys
         this.core().send(details.name, details.down);
         if(details.down && this._keysDown.indexOf(details.name) === -1) this._keysDown.push(details.name);
         else if(!details.down) this._keysDown = this._keysDown.filter(function(n) { return (n !== details.down); } );
