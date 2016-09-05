@@ -115,3 +115,9 @@ Input.mouseIndexToString = function(index) {
       break;
   }
 }
+
+Input.isMouseString = function(string) {
+  if(string === "mousebuttonleft" || string === "mousebuttonmiddle" || string === "mousebuttonright" ||
+    string === "mousebutton4" || string === "mousebutton5" || string === "mousewheelup" || string === "mousewheeldown") return true;
+  return false;
+}

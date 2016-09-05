@@ -20,6 +20,7 @@ Profile.prototype.initMembers = function() {
   this._held = {};
   this._whitelist = null;
   this._whitelistLoading = false;
+  this._mouseFuncHeld = [];
 }
 
 Profile.prototype.core = function() {

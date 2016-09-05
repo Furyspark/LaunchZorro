@@ -79,7 +79,25 @@ Sequence.prototype.continue = function() {
         }
         // Keys
         else {
-          this.core().send(details.name, details.down);
+          if(Input.isMouseString(details.name)) {
+            // Mouse function already held
+            if(this.profile()._mouseFuncHeld.indexOf(details.name) !== -1) {
+              if(!details.down) {
+                this.profile()._mouseFuncHeld.splice(this.profile()._mouseFuncHeld.indexOf(details.name), 1);
+                this.core().send(details.name, details.down);
+              }
+            }
+            // Mouse function not yet held
+            else {
+              if(details.down) {
+                this.profile()._mouseFuncHeld.push(details.name);
+                this.core().send(details.name, details.down);
+              }
+            }
+          }
+          else {
+            this.core().send(details.name, details.down);
+          }
           if(details.down && this._keysDown.indexOf(details.name) === -1) {
             this._keysDown.push(details.name);
           }
