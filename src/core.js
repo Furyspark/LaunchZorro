@@ -12,6 +12,17 @@ $Core.devices.mice = {};
 $Core.devices.list = JSON.parse(fs.readFileSync("devices.json"));
 $Core.conf = {};
 
+$Core.DEVICE_TYPE_KEYBOARD = 0;
+$Core.DEVICE_TYPE_MOUSE    = 1;
+
+$Core.MOUSE_WHEEL_NONE = 0;
+$Core.MOUSE_WHEEL_V    = 1;
+$Core.MOUSE_WHEEL_H    = 2;
+
+$Core.MOUSE_MOVE_REL  = 0;
+$Core.MOUSE_MOVE_ABS  = 1;
+
+
 window.onload = function() {
   $Audio.addSound("reload", "assets/audio/profiler_reload.wav");
   $Audio.addSound("unload", "assets/audio/profiler_unload.wav");
@@ -160,20 +171,26 @@ $Core.detectRunning = function() {
   });
 }
 
-$Core.handleInterception = function(keyCode, keyDown, keyE0, hwid) {
-  var keyName = Input.indexToString(keyCode, keyE0);
+$Core.handleInterception = function(keyCode, keyDown, keyE0, hwid, deviceType, mouseWheel, mouseMove, x, y) {
+  var keyName = "";
+  if(deviceType === $Core.DEVICE_TYPE_KEYBOARD) keyName = Input.indexToString(keyCode, keyE0);
 
-  if(this.conf && this.conf.ptt && this.conf.ptt.origin && keyName === this.conf.ptt.origin) {
-    this.handler.send(this.conf.ptt.key, keyDown);
-  }
-  else {
-    var prof = $Profiles.profile;
-    if(prof) {
-      prof.handleInterception(keyCode, keyDown, keyE0, hwid, keyName);
+  if(keyName !== "") {
+    if(this.conf && this.conf.ptt && this.conf.ptt.origin && keyName === this.conf.ptt.origin) {
+      this.handler.send(this.conf.ptt.key, keyDown);
     }
     else {
-      this.handler.send_default();
+      var prof = $Profiles.profile;
+      if(prof) {
+        prof.handleInterception(keyCode, keyDown, keyE0, hwid, keyName, mouseWheel, mouseMove, x, y);
+      }
+      else {
+        this.handler.send_default();
+      }
     }
+  }
+  else {
+    this.handler.send_default();
   }
 }
 
