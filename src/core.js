@@ -175,22 +175,17 @@ $Core.handleInterception = function(keyCode, keyDown, keyE0, hwid, deviceType, m
   var keyName = "";
   if(deviceType === $Core.DEVICE_TYPE_KEYBOARD) keyName = Input.indexToString(keyCode, keyE0);
 
-  if(keyName !== "") {
-    if(this.conf && this.conf.ptt && this.conf.ptt.origin && keyName === this.conf.ptt.origin) {
-      this.handler.send(this.conf.ptt.key, keyDown);
-    }
-    else {
-      var prof = $Profiles.profile;
-      if(prof) {
-        prof.handleInterception(keyCode, keyDown, keyE0, hwid, keyName, mouseWheel, mouseMove, x, y);
-      }
-      else {
-        this.handler.send_default();
-      }
-    }
+  if(this.conf && this.conf.ptt && this.conf.ptt.origin && keyName === this.conf.ptt.origin) {
+    this.handler.send(this.conf.ptt.key, keyDown);
   }
   else {
-    this.handler.send_default();
+    var prof = $Profiles.profile;
+    if(prof) {
+      prof.handleInterception(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y);
+    }
+    else {
+      this.handler.send_default();
+    }
   }
 }
 

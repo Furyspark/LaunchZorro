@@ -140,6 +140,31 @@ Input.indexToString = function(index, e0) {
     case 88: return "f12"; break;
   }
 }
+
+Input.mouseIndexToString = function(index) {
+  switch(index) {
+    case 1:
+    case 2:
+      return "mousebuttonleft";
+      break;
+    case 4:
+    case 8:
+      return "mousebuttonright";
+      break;
+    case 16:
+    case 32:
+      return "mousebuttonmiddle";
+      break;
+    case 64:
+    case 128:
+      return "mousebutton4";
+      break;
+    case 256:
+    case 512:
+      return "mousebutton5";
+      break;
+  }
+}
 var fs = require("fs");
 var path = require("path");
 var spawn = require("child_process").spawn;
@@ -153,6 +178,17 @@ $Core.devices.lhc = {};
 $Core.devices.mice = {};
 $Core.devices.list = JSON.parse(fs.readFileSync("devices.json"));
 $Core.conf = {};
+
+$Core.DEVICE_TYPE_KEYBOARD = 0;
+$Core.DEVICE_TYPE_MOUSE    = 1;
+
+$Core.MOUSE_WHEEL_NONE = 0;
+$Core.MOUSE_WHEEL_V    = 1;
+$Core.MOUSE_WHEEL_H    = 2;
+
+$Core.MOUSE_MOVE_REL  = 0;
+$Core.MOUSE_MOVE_ABS  = 1;
+
 
 window.onload = function() {
   $Audio.addSound("reload", "assets/audio/profiler_reload.wav");
@@ -302,8 +338,9 @@ $Core.detectRunning = function() {
   });
 }
 
-$Core.handleInterception = function(keyCode, keyDown, keyE0, hwid) {
-  var keyName = Input.indexToString(keyCode, keyE0);
+$Core.handleInterception = function(keyCode, keyDown, keyE0, hwid, deviceType, mouseWheel, mouseMove, x, y) {
+  var keyName = "";
+  if(deviceType === $Core.DEVICE_TYPE_KEYBOARD) keyName = Input.indexToString(keyCode, keyE0);
 
   if(this.conf && this.conf.ptt && this.conf.ptt.origin && keyName === this.conf.ptt.origin) {
     this.handler.send(this.conf.ptt.key, keyDown);
@@ -311,7 +348,7 @@ $Core.handleInterception = function(keyCode, keyDown, keyE0, hwid) {
   else {
     var prof = $Profiles.profile;
     if(prof) {
-      prof.handleInterception(keyCode, keyDown, keyE0, hwid, keyName);
+      prof.handleInterception(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y);
     }
     else {
       this.handler.send_default();
@@ -612,9 +649,23 @@ Sequence.prototype.continue = function() {
     var details = action.get();
     switch(details.type) {
       case "key":
-        this.core().send(details.name, details.down);
-        if(details.down && this._keysDown.indexOf(details.name) === -1) this._keysDown.push(details.name);
-        else if(!details.down) this._keysDown = this._keysDown.filter(function(n) { return (n !== details.down); } );
+        // Mouse wheel
+        if(details.name === "mousewheelup") {
+          if(details.down) this.core().send("mousewheel", true, 0, 100);
+        }
+        else if(details.name === "mousewheeldown") {
+          if(details.down) this.core().send("mousewheel", true, 0, -100);
+        }
+        // Keys
+        else {
+          this.core().send(details.name, details.down);
+          if(details.down && this._keysDown.indexOf(details.name) === -1) {
+            this._keysDown.push(details.name);
+          }
+          else if(!details.down) {
+            this._keysDown = this._keysDown.filter(function(n) { return (n !== details.down); } );
+          }
+        }
         break;
       case "keymap":
         this.profile().switchKeymap(details.value);
@@ -933,7 +984,7 @@ Profile.prototype.options = function() {
   return this.source().options;
 }
 
-Profile.prototype.handleInterception = function(keyCode, keyDown, keyE0, hwid, keyName) {
+Profile.prototype.handleInterception = function(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y) {
   var options = this.options();
   var coreOptions = $Core.options();
 

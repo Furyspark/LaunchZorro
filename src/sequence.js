@@ -71,12 +71,22 @@ Sequence.prototype.continue = function() {
     switch(details.type) {
       case "key":
         // Mouse wheel
-        if(details.name === "mousewheelup") this.core().send("mousewheel", true, 0, 120);
-        else if(details.name === "mousewheeldown") this.core().send("mousewheel", true, 0, -120);
+        if(details.name === "mousewheelup") {
+          if(details.down) this.core().send("mousewheel", true, 0, 100);
+        }
+        else if(details.name === "mousewheeldown") {
+          if(details.down) this.core().send("mousewheel", true, 0, -100);
+        }
         // Keys
-        this.core().send(details.name, details.down);
-        if(details.down && this._keysDown.indexOf(details.name) === -1) this._keysDown.push(details.name);
-        else if(!details.down) this._keysDown = this._keysDown.filter(function(n) { return (n !== details.down); } );
+        else {
+          this.core().send(details.name, details.down);
+          if(details.down && this._keysDown.indexOf(details.name) === -1) {
+            this._keysDown.push(details.name);
+          }
+          else if(!details.down) {
+            this._keysDown = this._keysDown.filter(function(n) { return (n !== details.down); } );
+          }
+        }
         break;
       case "keymap":
         this.profile().switchKeymap(details.value);
