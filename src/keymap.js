@@ -19,9 +19,9 @@ Keymap.prototype.profile = function() {
   return this._profile;
 }
 
-Keymap.prototype.getBind = function(name) {
-  if(this._binds[name]) {
-    return this._binds[name];
+Keymap.prototype.getBind = function(deviceType, name) {
+  if(this._binds[deviceType] && this._binds[deviceType][name]) {
+    return this._binds[deviceType][name];
   }
   return null;
 }
@@ -36,6 +36,7 @@ Keymap.prototype.applySource = function(keymapSrc, bindsSrc) {
     var src = bindsSrc[a];
     var bind = new Bind(this);
     bind.applySource(src);
-    this._binds[bind.origin] = bind;
+    this._binds[bind.hwid] = this._binds[bind.hwid] || {};
+    this._binds[bind.hwid][bind.origin] = bind;
   }
 }

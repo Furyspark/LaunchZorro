@@ -9,10 +9,14 @@
     <!-- Device Groups -->
     <div class="group">
       <div id="group_device" class="group">
-        <ul id="group_lhc" class="group">
-        </ul>
-        <ul id="group_mice" class="group">
-        </ul>
+        <div class="group hardware_cat">
+          <ul id="group_lhc">
+          </ul>
+        </div>
+        <div class="group hardware_cat">
+          <ul id="group_mice">
+          </ul>
+        </div>
       </div>
       <!-- Profile Groups -->
       <div id="group_profiles" class="group">
@@ -23,21 +27,27 @@
       </div>
     </div>
     <!-- Helper Buttons -->
-    <div class="group">
+    <div class="group" style="width:70%">
       <div class="group">
         <button type="button" class="normal" onclick="$Core.unloadProfile();">Unload</button>
         <button type="button" class="normal" onclick="$Core.reloadProfile();">Reload</button>
-        <button type="button" class="normal" onclick="$Core.refreshProfiles();">Refresh</button>
-
-        <!-- Enable Defaults -->
-        <label style="position:absolute;left:30px;top:40px" for="profile-enable-defaults">Enable Defaults</label>
-        <input type="checkbox" style="position:absolute;left:10px;top:40px" id="profile-enable-defaults"/>
+        <button type="button" class="normal" onclick="$Core.refreshProfiles();">Refresh</button><br>
       </div>
       <!-- Profile Info -->
       <div class="group" id="group_profile_info">
         <ul id="profile_info">
           <li id="info_current_profile">Current Profile: N/A</li>
         </ul>
+      </div>
+      <br>
+      <!-- Options -->
+      <div class="group">
+        <!-- Enable Defaults -->
+        <input type="checkbox" style="left:10px;top:40px" id="profile-enable-defaults"/>
+        <label style="left:30px;top:40px" for="profile-enable-defaults">Enable Defaults</label>
+        <!-- Whitelist -->
+        <input type="checkbox" style="left:10px;top:80px" id="profile-whitelist" onchange="$Core.onUsingWhitelistChange();"/>
+        <label style="left:30px;top:80px" for="profile-whitelist">Whitelist</label>
       </div>
     </div>
   </body>

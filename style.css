@@ -1,24 +1,30 @@
 body {
-  background-color: #aaaaaa;
-  margin: 0;
-  display: inline;
+  background: #21252b;
+  padding: 0;
+  /*display: inline-block;*/
 }
 
 .group {
-  position: relative;
-  display: flex;
-  padding: 4px;
-  margin: 4px;
-  border: 1px solid #606060;
+  display: inline-block;
+  vertical-align: top;
+  padding: 0.4em;
+  margin: 0.4em;
+  border: 1px solid #181a1f;
+  border-radius: 0.5em;
+  color: #abb2b1;
 }
 
-#group_device {
+.hardware_cat {
+  width: 10em;
+  height: 8em;
+}
+
+/*#group_device {
   width: 420px;
   height: 150px;
 }
 
 #group_lhc {
-  display: initial;
   top: 20px;
   width: 200px;
   height: 120px;
@@ -26,7 +32,6 @@ body {
 }
 
 #group_mice {
-  display: initial;
   top: 20px;
   width: 200px;
   height: 120px;
@@ -42,11 +47,12 @@ body {
   width: 240px;
   height: 64px;
   overflow: auto;
-}
+}*/
 
 ul {
-  padding: 0;
-  position: relative;
+  padding-left: 0;
+  margin: 0;
+  /*position: relative;*/
   list-style-type: none;
 }
 
@@ -91,3 +97,25 @@ button:hover {
 button.normal {
   width: 128px;
 }*/
+
+button {
+  border: 1px solid black;
+  border-radius: 0.4em;
+  font-family: Arial;
+  color: #abb2b1;
+  background: #414855;
+  text-decoration: none;
+  width: 96px;
+  height: 24px;
+  transition: background 0.5s, color 0.5s, border-radius 0.5s;
+}
+
+button:focus {
+  outline: 0;
+}
+
+button:hover {
+  background: #9fafcf;
+  color: #4e5666;
+  border-radius: 0.8em;
+}

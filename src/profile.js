@@ -6,8 +6,6 @@ Profile.prototype.constructor = Profile;
 
 Profile.prototype.initialize = function(url) {
   this.initMembers();
-  // this._core = new interceptionJS();
-  // this._core.start(this.handleInterception.bind(this));
   this.loadProfile(url);
 }
 
@@ -20,6 +18,7 @@ Profile.prototype.initMembers = function() {
   this._held = {};
   this._whitelist = null;
   this._whitelistLoading = false;
+  this._usingWhitelist = false;
   this._mouseFuncHeld = [];
 }
 
@@ -38,6 +37,9 @@ Profile.prototype.loadProfile = function(url) {
     if(!err) {
       this._whitelist = JSON.parse(data);
       this._whitelistLoading = false;
+      // Get whitelist element value
+      var elem = document.getElementById("profile-whitelist");
+      if(elem.checked) this._usingWhitelist = true;
     }
     else {
       console.log("No whitelist has been loaded.");
@@ -74,8 +76,9 @@ Profile.prototype.handleInterception = function(keyCode, keyDown, keyE0, hwid, k
       this.core().send_default();
     }
     else {
-      var onWhitelist = this.usingWhitelist() ? this.checkWhitelist(hwid) : true;
-      var bind = this.getBind(keyName);
+      var deviceType = this.checkWhitelist(hwid);
+      var onWhitelist = this.usingWhitelist() ? this.isOnWhitelist(deviceType) : true;
+      var bind = this.getBind(deviceType, keyName);
       if(onWhitelist && bind) {
         // Key DOWN
         if(keyDown) {
@@ -94,39 +97,47 @@ Profile.prototype.handleInterception = function(keyCode, keyDown, keyE0, hwid, k
 }
 
 Profile.prototype.checkWhitelist = function(hwid) {
-  if(this._whitelistLoading) return false;
-  return (this._whitelist.indexOf(hwid) !== -1);
+  if(this._whitelistLoading) return "any";
+  for(var a in this._whitelist) {
+    var obj = this._whitelist[a];
+    if(obj.indexOf(hwid) !== -1) return a;
+  }
+  return "any";
+}
+
+Profile.prototype.isOnWhitelist = function(deviceType) {
+  return (this._whitelist[deviceType] !== undefined);
 }
 
 Profile.prototype.usingWhitelist = function() {
-  return (this._whitelist !== null);
+  return (this._whitelist !== null && this._usingWhitelist);
 }
 
 Profile.prototype.remove = function() {
   // this.core().destroy();
 }
 
-Profile.prototype.getBind = function(keyName) {
+Profile.prototype.getBind = function(deviceType, keyName) {
   // Search held bind
   var held = this._held[keyName];
   var km;
   var bind;
   if(held) {
     km = this.keymaps[held.keymap];
-    bind = km.getBind(keyName);
+    bind = km.getBind(deviceType, keyName);
     if(bind) {
       return bind;
     }
   }
   // Search current keymap
   km = this.keymaps[this.keymapIndex()];
-  bind = km.getBind(keyName);
+  bind = km.getBind(deviceType, keyName);
   if(bind) {
     return bind;
   }
   // Search base keymap
   km = this.keymaps[0];
-  bind = km.getBind(keyName);
+  bind = km.getBind(deviceType, keyName);
   if(bind) {
     return bind;
   }

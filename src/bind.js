@@ -18,6 +18,7 @@ Bind.prototype.initMembers = function() {
   this._toggle = false;
   this.toggleActive = false;
   this.held = false;
+  this.hwid = "any";
 }
 
 Bind.prototype.keymap = function() {
@@ -119,6 +120,10 @@ Bind.prototype.applySource = function(src) {
       this.sequence.down.addAction(new Action("key", "lshift", true));
       doShift = true;
     }
+  }
+
+  if(src.hardware_id) {
+    this.hwid = src.hardware_id;
   }
 
   if(src.key.match(/KEYMAP([0-9]+)/i)) {

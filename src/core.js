@@ -55,11 +55,11 @@ $Core.start = function() {
       // Add click event
       if(groupName === "lhc") {
         elem.onchange = function() {
-          $Core.selectLHC(this.firstChild.value);
+          $Core.onLHCSelect();
         };
       } else if(groupName === "mice") {
         elem.onchange = function() {
-          $Core.selectMouse(this.firstChild.value);
+          $Core.onMouseSelect();
         };
       }
 
@@ -87,17 +87,25 @@ $Core.start = function() {
 
 $Core.onConfLoaded = function() {
   var conf = $Core.conf;
-  if(conf.autocapsf13) {
-    // $Profiles.launchCapsF13();
+  if(conf.defaultDevice && conf.defaultDevice.lhc) {
+    // TODO: Add support for remembering device selection
   }
 };
 
 $Core.selectLHC = function(value) {
+  var groupElem = document.getElementById("group_lhc");
+  for(var a = 0;a < groupElem.children.length;a++) {
+    var elem = groupElem.children[a];
+    console.log(elem);
+  }
+}
+
+$Core.onLHCSelect = function() {
   $Profiles.clear();
   $Categories.refresh();
 };
 
-$Core.selectMouse = function(value) {
+$Core.onMouseSelect = function() {
   $Profiles.clear();
   $Categories.refresh();
 };
@@ -175,6 +183,9 @@ $Core.handleInterception = function(keyCode, keyDown, keyE0, hwid, deviceType, m
   var keyName = "";
   if(deviceType === $Core.DEVICE_TYPE_KEYBOARD) keyName = Input.indexToString(keyCode, keyE0);
 
+  // HWID checking
+  // if(keyDown && !this.isMouseMove(keyCode, mouseWheel)) console.log(hwid);
+
   if(this.conf && this.conf.ptt && this.conf.ptt.origin && keyName === this.conf.ptt.origin) {
     this.handler.send(this.conf.ptt.key, keyDown);
   }
@@ -187,6 +198,10 @@ $Core.handleInterception = function(keyCode, keyDown, keyE0, hwid, deviceType, m
       this.handler.send_default();
     }
   }
+}
+
+$Core.isMouseMove = function(keyCode, mouseWheel) {
+  return (Input.isMouseString(keyCode) || mouseWheel === $Core.MOUSE_WHEEL_H || mouseWheel === $Core.MOUSE_WHEEL_V);
 }
 
 $Core.parseTasks = function(tasks) {
@@ -206,4 +221,15 @@ $Core.options = function() {
   return {
     enableDefaults: document.getElementById("profile-enable-defaults").checked
   };
+}
+
+$Core.onUsingWhitelistChange = function() {
+  var prof = $Profiles.profile;
+  if(prof) {
+    var elem = document.getElementById("profile-whitelist");
+    prof._usingWhitelist = false;
+    if(elem.checked) {
+      prof._usingWhitelist = true;
+    }
+  }
 }

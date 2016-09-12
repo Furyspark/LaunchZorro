@@ -88,6 +88,7 @@ Input.indexToString = function(index, e0) {
     case 83: if(e0) return "delete"; return ""; break;
     case 87: return "f11"; break;
     case 88: return "f12"; break;
+    case 91: if(e0) return "lwin"; return ""; break;
   }
 }
 
