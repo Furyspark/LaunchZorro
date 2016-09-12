@@ -205,14 +205,8 @@ window.onload = function() {
   $Audio.addSound("deactivate_profile", "assets/audio/deactivate_profile.wav");
   $Core.start();
   // Load conf.json
-  var xhr = new XMLHttpRequest();
-  xhr.overrideMimeType("application/json");
-  xhr.addEventListener("load", function(e) {
-    $Core.conf = JSON.parse(this.responseText);
-    $Core.onConfLoaded();
-  });
-  xhr.open("GET", "conf.json");
-  xhr.send();
+  $Core.conf = JSON.parse(fs.readFileSync("conf.json"));
+  $Core.onConfLoaded();
 };
 
 $Core.start = function() {
@@ -438,6 +432,9 @@ Keymap.prototype.getBind = function(deviceType, name) {
   if(this._binds[deviceType] && this._binds[deviceType][name]) {
     return this._binds[deviceType][name];
   }
+  // else if(this._binds["any"] && this._binds["any"][name]) {
+  //   return this._binds["any"][name];
+  // }
   return null;
 }
 

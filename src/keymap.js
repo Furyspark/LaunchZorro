@@ -23,6 +23,9 @@ Keymap.prototype.getBind = function(deviceType, name) {
   if(this._binds[deviceType] && this._binds[deviceType][name]) {
     return this._binds[deviceType][name];
   }
+  // else if(this._binds["any"] && this._binds["any"][name]) {
+  //   return this._binds["any"][name];
+  // }
   return null;
 }
 

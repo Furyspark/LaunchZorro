@@ -1,6 +1,7 @@
 var fs = require("fs");
 var concat = require("concatenate-files");
 var packager = require("electron-packager");
+var rimraf = require("rimraf");
 var packagerOptions = {
   dir: ".",
   arch: "x64",
@@ -10,7 +11,8 @@ var packagerOptions = {
     /profiler\.ico/i,
     /readme\.md/i,
     /sources\.json/i,
-    /src/i
+    /src/i,
+    /profiles/i
   ],
   afterCopy: [
     function(buildPath, electronVersion, platform, arch, callback) {
@@ -18,9 +20,9 @@ var packagerOptions = {
       var electronPath = pathArr.slice(0, -2).join("\/") + "/";
       fs.renameSync(buildPath + "/interception.dll", electronPath + "interception.dll");
       fs.renameSync(buildPath + "/devices.json", electronPath + "devices.json");
-      // fs.renameSync(buildPath + "/conf.json", electronPath + "conf.json");
+      fs.renameSync(buildPath + "/conf.json", electronPath + "conf.json");
       fs.renameSync(buildPath + "/profiler", electronPath + "profiler");
-      fs.renameSync(buildPath + "/profiles", electronPath + "profiles");
+      // fs.renameSync(buildPath + "/profiles", electronPath + "profiles");
       callback();
     }
   ],
