@@ -18,7 +18,6 @@ Profile.prototype.initMembers = function() {
   this._held = {};
   this._whitelist = null;
   this._whitelistLoading = false;
-  this._usingWhitelist = false;
   this._mouseFuncHeld = [];
 }
 
@@ -37,9 +36,6 @@ Profile.prototype.loadProfile = function(url) {
     if(!err) {
       this._whitelist = JSON.parse(data);
       this._whitelistLoading = false;
-      // Get whitelist element value
-      var elem = document.getElementById("profile-whitelist");
-      if(elem.checked) this._usingWhitelist = true;
     }
     else {
       console.log("No whitelist has been loaded.");
@@ -110,7 +106,7 @@ Profile.prototype.isOnWhitelist = function(deviceType) {
 }
 
 Profile.prototype.usingWhitelist = function() {
-  return (this._whitelist !== null && this._usingWhitelist);
+  return (this._whitelist !== null && $Core.conf.usingWhitelist === true);
 }
 
 Profile.prototype.remove = function() {

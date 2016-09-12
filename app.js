@@ -264,6 +264,10 @@ $Core.onConfLoaded = function() {
   if(conf.defaultDevice && conf.defaultDevice.lhc) {
     // TODO: Add support for remembering device selection
   }
+  if(conf.usingWhitelist === true) {
+    var elem = document.getElementById("profile-whitelist");
+    elem.checked = true;
+  }
 };
 
 $Core.selectLHC = function(value) {
@@ -398,14 +402,16 @@ $Core.options = function() {
 }
 
 $Core.onUsingWhitelistChange = function() {
-  var prof = $Profiles.profile;
-  if(prof) {
-    var elem = document.getElementById("profile-whitelist");
-    prof._usingWhitelist = false;
-    if(elem.checked) {
-      prof._usingWhitelist = true;
-    }
+  var elem = document.getElementById("profile-whitelist");
+  this.conf.usingWhitelist = false;
+  if(elem.checked) {
+    this.conf.usingWhitelist = true;
   }
+  this.saveConfig();
+}
+
+$Core.saveConfig = function() {
+  fs.writeFile("conf.json", JSON.stringify(this.conf), function(err) {} );
 }
 function Keymap() {
   this.initialize.apply(this, arguments);
@@ -998,7 +1004,6 @@ Profile.prototype.initMembers = function() {
   this._held = {};
   this._whitelist = null;
   this._whitelistLoading = false;
-  this._usingWhitelist = false;
   this._mouseFuncHeld = [];
 }
 
@@ -1017,9 +1022,6 @@ Profile.prototype.loadProfile = function(url) {
     if(!err) {
       this._whitelist = JSON.parse(data);
       this._whitelistLoading = false;
-      // Get whitelist element value
-      var elem = document.getElementById("profile-whitelist");
-      if(elem.checked) this._usingWhitelist = true;
     }
     else {
       console.log("No whitelist has been loaded.");
@@ -1086,12 +1088,11 @@ Profile.prototype.checkWhitelist = function(hwid) {
 }
 
 Profile.prototype.isOnWhitelist = function(deviceType) {
-  console.log(this._whitelist[deviceType]);
   return (this._whitelist[deviceType] !== undefined);
 }
 
 Profile.prototype.usingWhitelist = function() {
-  return (this._whitelist !== null && this._usingWhitelist);
+  return (this._whitelist !== null && $Core.conf.usingWhitelist === true);
 }
 
 Profile.prototype.remove = function() {

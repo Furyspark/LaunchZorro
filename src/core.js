@@ -90,6 +90,10 @@ $Core.onConfLoaded = function() {
   if(conf.defaultDevice && conf.defaultDevice.lhc) {
     // TODO: Add support for remembering device selection
   }
+  if(conf.usingWhitelist === true) {
+    var elem = document.getElementById("profile-whitelist");
+    elem.checked = true;
+  }
 };
 
 $Core.selectLHC = function(value) {
@@ -224,12 +228,14 @@ $Core.options = function() {
 }
 
 $Core.onUsingWhitelistChange = function() {
-  var prof = $Profiles.profile;
-  if(prof) {
-    var elem = document.getElementById("profile-whitelist");
-    prof._usingWhitelist = false;
-    if(elem.checked) {
-      prof._usingWhitelist = true;
-    }
+  var elem = document.getElementById("profile-whitelist");
+  this.conf.usingWhitelist = false;
+  if(elem.checked) {
+    this.conf.usingWhitelist = true;
   }
+  this.saveConfig();
+}
+
+$Core.saveConfig = function() {
+  fs.writeFile("conf.json", JSON.stringify(this.conf), function(err) {} );
 }

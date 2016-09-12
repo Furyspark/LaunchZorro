@@ -1,7 +1,1 @@
-{
-  "suspend_key": "f1",
-  "ptt": {
-    "origin": "capslock",
-    "key": "scrolllock"
-  }
-}
+{"suspend_key":"f1","ptt":{"origin":"capslock","key":"scrolllock"},"usingWhitelist":true}
