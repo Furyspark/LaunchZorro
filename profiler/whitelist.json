@@ -2,5 +2,8 @@
   "naga": [
     "HID\\VID_1532&PID_0053&REV_0200&MI_02",
     "HID\\VID_1532&PID_0053&REV_0200&MI_00"
+  ],
+  "orbweaver": [
+    "HID\\VID_1532&PID_0207&REV_0200&MI_00"
   ]
 }
