@@ -11,7 +11,7 @@ var packagerOptions = {
     /readme\.md/i,
     /sources\.json/i,
     /src/i,
-    /profiles/i
+    /^profiles$/i
   ],
   afterCopy: [
     function(buildPath, electronVersion, platform, arch, callback) {
