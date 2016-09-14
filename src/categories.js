@@ -1,5 +1,9 @@
 var $Categories = {};
 
+$Categories.path = {};
+$Categories.path.icon = {};
+$Categories.path.icon.blank = "icons/categories/blank.png";
+
 $Categories.clear = function() {
   var elem = this.getElement();
   while(elem.children.length > 0) {
@@ -8,10 +12,29 @@ $Categories.clear = function() {
 };
 
 $Categories.add = function(name) {
-  var elem = document.createElement("option");
-  elem.value = name;
-  elem.innerHTML = name;
+  var elem = document.createElement("div");
+  elem.id = "category_" + name.slice().replace(" ", "_");
+  elem.className = "group_option";
+  elem.style.background = $Core.color.category_unselected;
+  elem.onclick = function(e) {
+    $Categories.selectElem(this);
+    $Categories.onSelect();
+  }.bind(elem);
   this.getElement().appendChild(elem);
+  // Add label
+  var txtElem = document.createElement("span");
+  txtElem.innerHTML = name;
+  elem.appendChild(txtElem);
+  // Add icon
+  var iconPath = "icons/categories/" + name.toLowerCase() + ".png";
+  fs.access(iconPath, fs.constants.F_OK, function(err) {
+    var iconElem = document.createElement("img");
+    if(!err) iconElem.src = iconPath;
+    else iconElem.src = $Profiles.path.icon.blank;
+    iconElem.width = "32";
+    iconElem.height = "32";
+    elem.insertBefore(iconElem, txtElem);
+  });
 };
 
 $Categories.refresh = function() {
@@ -39,8 +62,25 @@ $Categories.getElement = function() {
 
 $Categories.getSelected = function() {
   var parent = this.getElement();
-  return parent.options[parent.selectedIndex];
+  for(var a = 0;a < parent.children.length;a++) {
+    var elem = parent.children[a];
+    if(elem.selected) return elem;
+  }
+  return null;
 };
+
+$Categories.selectElem = function(elem) {
+  var parent = this.getElement();
+  for(var a = 0;a < parent.children.length;a++) {
+    var child = parent.children[a];
+    child.selected = false;
+    child.style.background = $Core.color.category_unselected;
+    if(child === elem) {
+      child.selected = true;
+      child.style.background = $Core.color.category_selected;
+    }
+  }
+}
 
 $Categories.baseDir = function() {
   var mouseDir = $Core.devices.mice[$Core.MouseElement().value].dirName;

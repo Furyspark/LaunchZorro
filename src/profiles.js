@@ -3,6 +3,10 @@ var $Profiles = {};
 $Profiles.profile = null;
 $Profiles.subProfiles = {};
 
+$Profiles.path = {};
+$Profiles.path.icon = {};
+$Profiles.path.icon.blank = "icons/profiles/blank.png";
+
 
 $Profiles.clear = function() {
   var elem = this.getElement();
@@ -12,10 +16,29 @@ $Profiles.clear = function() {
 };
 
 $Profiles.add = function(name) {
-  var elem = document.createElement("option");
-  elem.value = name;
-  elem.innerHTML = name;
+  var elem = document.createElement("div");
+  elem.id = name.slice().replace(" ", "_");
+  elem.className = "group_option";
+  elem.style.background = $Core.color.profile_unselected;
+  elem.onclick = function(e) {
+    $Profiles.selectElem(this);
+    $Profiles.onSelect();
+  }.bind(elem);
   this.getElement().appendChild(elem);
+  // Add label
+  var txtElem = document.createElement("span");
+  txtElem.innerHTML = name;
+  elem.appendChild(txtElem);
+  // Add icon
+  var iconPath = "icons/profiles/" + name.toLowerCase() + ".png";
+  fs.access(iconPath, fs.constants.F_OK, function(err) {
+    var iconElem = document.createElement("img");
+    if(!err) iconElem.src = iconPath;
+    else iconElem.src = $Profiles.path.icon.blank;
+    iconElem.width = "32";
+    iconElem.height = "32";
+    elem.insertBefore(iconElem, txtElem);
+  });
 };
 
 $Profiles.refresh = function() {
@@ -51,8 +74,25 @@ $Profiles.getElement = function() {
 
 $Profiles.getSelected = function() {
   var parent = this.getElement();
-  return parent.options[parent.selectedIndex];
+  for(var a = 0;a < parent.children.length;a++) {
+    var elem = parent.children[a];
+    if(elem.selected) return elem;
+  }
+  return null;
 };
+
+$Profiles.selectElem = function(elem) {
+  var parent = this.getElement();
+  for(var a = 0;a < parent.children.length;a++) {
+    var child = parent.children[a];
+    child.selected = false;
+    child.style.background = $Core.color.profile_unselected;
+    if(child === elem) {
+      child.selected = true;
+      child.style.background = $Core.color.profile_selected;
+    }
+  }
+}
 
 $Profiles.select = function(value) {
   var nodes = this.getElement().childNodes;
@@ -67,10 +107,9 @@ $Profiles.select = function(value) {
 $Profiles.baseDir = function() {
   var mouseDir = $Core.devices.mice[$Core.MouseElement().value].dirName;
   var lhcDir = $Core.devices.lhc[$Core.LHCElement().value].dirName;
-  var catDir = $Categories.getSelected();
-  if(catDir) {
-    catDir = catDir.value;
-    return "profiles/" + mouseDir + "/" + lhcDir + "/" + catDir + "/";
+  var catDir = $Categories.getSelected().id;
+  if(catDir.match(/category_([\w-]+)/)) {
+    return "profiles/" + mouseDir + "/" + lhcDir + "/" + RegExp.$1 + "/";
   }
   return "";
 };

@@ -6,6 +6,12 @@ var interceptionJS = require("./interception/interception");
 
 var $Core = {};
 
+$Core.color = {};
+$Core.color.profile_selected = "#FFC57F";
+$Core.color.profile_unselected = "white";
+$Core.color.category_selected = $Core.color.profile_selected;
+$Core.color.category_unselected = $Core.color.profile_unselected;
+
 $Core.devices = {};
 $Core.devices.lhc = {};
 $Core.devices.mice = {};
@@ -75,21 +81,30 @@ $Core.start = function() {
 
   $Core.handler = new interceptionJS();
   $Core.handler.start($Core.handleInterception.bind($Core));
+  // $Core.initQuickField();
 
   $Categories.refresh();
 };
 
 $Core.onConfLoaded = function() {
   var conf = $Core.conf;
+  var doRefresh = false;
   if(conf.defaultDevice && conf.defaultDevice.lhc) {
     $Core.selectLHC(conf.defaultDevice.lhc);
+    doRefresh = true;
   }
   if(conf.defaultDevice && conf.defaultDevice.mouse) {
     $Core.selectMouse(conf.defaultDevice.mouse);
+    doRefresh = true;
   }
   if(conf.usingWhitelist === true) {
     var elem = document.getElementById("profile-whitelist");
     elem.checked = true;
+  }
+
+  if(doRefresh) {
+    $Profiles.clear();
+    $Categories.refresh();
   }
 };
 

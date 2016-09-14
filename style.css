@@ -135,7 +135,26 @@ button:hover {
   border-radius: 0.8em;
 }
 
-#group_profiles select {
+.group_option {
+  border: 2px solid transparent;
+  border-radius: 0.5em;
+  width: 128px;
+  height: 32px;
+  cursor: hand;
+}
+
+.group_option span {
+  display: inline-block;
+  width: 96px;
+  text-align: center;
+  vertical-align: top;
+}
+
+.group_option:hover {
+  border: 2px solid #FF8C00;
+}
+
+/*#group_profiles select {
   outline: 0;
 }
 
@@ -150,4 +169,4 @@ button:hover {
 
 #group_profiles option:nth-child(even) {
   background: #bbbbbb;
-}
+}*/
