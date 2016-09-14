@@ -14,6 +14,17 @@ body {
   color: #abb2b1;
 }
 
+.quickfield_item {
+  display: inline-block;
+  vertical-align: top;
+  margin: 0;
+  padding: 0;
+  width: 160px;
+  height: 48px;
+  overflow: hidden;
+  border: 1px solid #181a1f;
+}
+
 .hardware_cat {
   width: 10em;
   height: 8em;
@@ -122,4 +133,21 @@ button:hover {
   background: #9fafcf;
   color: #4e5666;
   border-radius: 0.8em;
+}
+
+#group_profiles select {
+  outline: 0;
+}
+
+#group_profiles option {
+  outline: 0;
+  height: 28px;
+  line-height: 28px;
+  background: white;
+  vertical-align: middle;
+  padding-top: 8px;
+}
+
+#group_profiles option:nth-child(even) {
+  background: #bbbbbb;
 }
