@@ -128,11 +128,6 @@ $Profiles.loadProfile = function() {
     this.closeProfile();
 
     this.profile = new Profile(profilePath);
-
-    // if(this.profile) {
-    //   this.profile.kill();
-    // }
-    // this.profile = spawn("Profiler_Test.exe", ["../" + profilePath], {shell: false, cwd: "profiler"});
   }
 };
 
