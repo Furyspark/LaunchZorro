@@ -82,7 +82,10 @@ $Core.start = function() {
 $Core.onConfLoaded = function() {
   var conf = $Core.conf;
   if(conf.defaultDevice && conf.defaultDevice.lhc) {
-    // TODO: Add support for remembering device selection
+    $Core.selectLHC(conf.defaultDevice.lhc);
+  }
+  if(conf.defaultDevice && conf.defaultDevice.mouse) {
+    $Core.selectMouse(conf.defaultDevice.mouse);
   }
   if(conf.usingWhitelist === true) {
     var elem = document.getElementById("profile-whitelist");
@@ -91,21 +94,27 @@ $Core.onConfLoaded = function() {
 };
 
 $Core.selectLHC = function(value) {
-  var groupElem = document.getElementById("group_lhc");
-  for(var a = 0;a < groupElem.children.length;a++) {
-    var elem = groupElem.children[a];
-    console.log(elem);
-  }
+  $Core.devices.lhc[value].element.firstChild.checked = true;
+}
+
+$Core.selectMouse = function(value) {
+  $Core.devices.mice[value].element.firstChild.checked = true;
 }
 
 $Core.onLHCSelect = function() {
   $Profiles.clear();
   $Categories.refresh();
+  $Core.conf.defaultDevice = $Core.conf.defaultDevice || {};
+  $Core.conf.defaultDevice.lhc = $Core.LHCElement().value;
+  $Core.saveConfig();
 };
 
 $Core.onMouseSelect = function() {
   $Profiles.clear();
   $Categories.refresh();
+  $Core.conf.defaultDevice = $Core.conf.defaultDevice || {};
+  $Core.conf.defaultDevice.mouse = $Core.MouseElement().value;
+  $Core.saveConfig();
 };
 
 $Core.LHCElement = function() {

@@ -65,6 +65,10 @@ button {
   height: 24px;
 }
 
+input[type=radio] {
+  outline: 0;
+}
+
 /*button {
   background: #3498db;
   background-image: -webkit-linear-gradient(top, #3498db, #2980b9);
