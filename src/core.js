@@ -257,3 +257,16 @@ $Core.onUsingWhitelistChange = function() {
 $Core.saveConfig = function() {
   fs.writeFile("conf.json", JSON.stringify(this.conf), function(err) {} );
 }
+
+$Core.initQuickField = function() {
+  var groupElem = document.createElement("div");
+  groupElem.className = "group";
+  groupElem.id = "group_quickfield";
+  document.body.appendChild(groupElem);
+  for(var a = 0;a < 10;a++) {
+    var elem = document.createElement("div");
+    elem.className = "quickfield_item";
+    elem.id = "quickfield_item" + a.toString();
+    groupElem.appendChild(elem);
+  }
+}

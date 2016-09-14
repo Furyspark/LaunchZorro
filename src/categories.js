@@ -13,7 +13,8 @@ $Categories.clear = function() {
 
 $Categories.add = function(name) {
   var elem = document.createElement("div");
-  elem.id = "category_" + name.slice().replace(" ", "_");
+  elem.id = "category_" + name.slice().replace(/[ ]/g, "_");
+  elem.value = name;
   elem.className = "group_option";
   elem.style.background = $Core.color.category_unselected;
   elem.onclick = function(e) {
@@ -29,8 +30,8 @@ $Categories.add = function(name) {
   var iconPath = "icons/categories/" + name.toLowerCase() + ".png";
   fs.access(iconPath, fs.constants.F_OK, function(err) {
     var iconElem = document.createElement("img");
-    if(!err) iconElem.src = iconPath;
-    else iconElem.src = $Profiles.path.icon.blank;
+    if(!err) iconElem.src = process.cwd() + "/" + iconPath;
+    else iconElem.src = process.cwd() + "/" + $Profiles.path.icon.blank;
     iconElem.width = "32";
     iconElem.height = "32";
     elem.insertBefore(iconElem, txtElem);

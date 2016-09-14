@@ -5,7 +5,7 @@ $Profiles.subProfiles = {};
 
 $Profiles.path = {};
 $Profiles.path.icon = {};
-$Profiles.path.icon.blank = "icons/profiles/blank.png";
+$Profiles.path.icon.blank = "icons/profiles/generic/blank.png";
 
 
 $Profiles.clear = function() {
@@ -17,7 +17,8 @@ $Profiles.clear = function() {
 
 $Profiles.add = function(name) {
   var elem = document.createElement("div");
-  elem.id = name.slice().replace(" ", "_");
+  elem.id = name.slice().replace(/[ ]/g, "_");
+  elem.value = name;
   elem.className = "group_option";
   elem.style.background = $Core.color.profile_unselected;
   elem.onclick = function(e) {
@@ -30,11 +31,19 @@ $Profiles.add = function(name) {
   txtElem.innerHTML = name;
   elem.appendChild(txtElem);
   // Add icon
-  var iconPath = "icons/profiles/" + name.toLowerCase() + ".png";
+  var dirName = "generic";
+  var catElem = $Categories.getSelected();
+  if(catElem) {
+    var catDir = catElem.id;
+    if(catDir.match(/category_([\w-]+)/)) {
+      dirName = RegExp.$1.toLowerCase();
+    }
+  }
+  var iconPath = "icons/profiles/" + dirName.toLowerCase() + "/" + name.toLowerCase() + ".png";
   fs.access(iconPath, fs.constants.F_OK, function(err) {
     var iconElem = document.createElement("img");
-    if(!err) iconElem.src = iconPath;
-    else iconElem.src = $Profiles.path.icon.blank;
+    if(!err) iconElem.src = process.cwd() + "/" + iconPath;
+    else iconElem.src = process.cwd() + "/" + $Profiles.path.icon.blank;
     iconElem.width = "32";
     iconElem.height = "32";
     elem.insertBefore(iconElem, txtElem);
@@ -107,9 +116,10 @@ $Profiles.select = function(value) {
 $Profiles.baseDir = function() {
   var mouseDir = $Core.devices.mice[$Core.MouseElement().value].dirName;
   var lhcDir = $Core.devices.lhc[$Core.LHCElement().value].dirName;
-  var catDir = $Categories.getSelected().id;
-  if(catDir.match(/category_([\w-]+)/)) {
-    return "profiles/" + mouseDir + "/" + lhcDir + "/" + RegExp.$1 + "/";
+  var catElem = $Categories.getSelected();
+  if(catElem) {
+    var catDir = catElem.value;
+    return "profiles/" + mouseDir + "/" + lhcDir + "/" + catDir + "/";
   }
   return "";
 };
@@ -135,6 +145,7 @@ $Profiles.closeProfile = function() {
   if(this.profile) {
     this.profile.remove();
     this.profile = null;
+    this.selectElem(null);
   }
 }
 
