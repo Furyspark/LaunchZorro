@@ -135,8 +135,6 @@ $Profiles.loadProfile = function() {
     this.setProfileInfo(profileName);
     var profilePath = this.baseDir() + profileName + ".json";
 
-    this.closeProfile();
-
     this.profile = new Profile(profilePath);
   }
 };
