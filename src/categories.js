@@ -1,8 +1,13 @@
 var $Categories = {};
 
-$Categories.path = {};
-$Categories.path.icon = {};
+$Categories.path            = {};
+$Categories.path.icon       = {};
 $Categories.path.icon.blank = "icons/categories/blank.png";
+
+$Categories.current          = {};
+$Categories.current.lhc      = "";
+$Categories.current.mouse    = "";
+$Categories.current.category = "";
 
 $Categories.clear = function() {
   var elem = this.getElement();
@@ -36,18 +41,20 @@ $Categories.add = function(name) {
     iconElem.height = "32";
     elem.insertBefore(iconElem, txtElem);
   });
+  return elem;
 };
 
 $Categories.refresh = function() {
-  var selected = this.getSelected();
-  if(selected) selected = selected.value;
   this.clear();
   var cats = this.getCategoryDirectories();
   for(var a = 0;a < cats.length;a++) {
     var cat = cats[a];
-    this.add(cat);
+    var elem = this.add(cat);
+    if($Core.LHCElement().value === this.current.lhc && $Core.MouseElement().value === this.current.mouse &&
+        cat === this.current.category) {
+      this.selectElem(elem);
+    }
   }
-  if(selected) this.select(selected);
 };
 
 $Categories.getCategoryDirectories = function() {
@@ -91,6 +98,9 @@ $Categories.baseDir = function() {
 
 $Categories.onSelect = function() {
   $Profiles.refresh();
+  this.current.lhc = $Core.LHCElement().value;
+  this.current.mouse = $Core.MouseElement().value;
+  this.current.category = this.getSelected().value;
 };
 
 $Categories.select = function(value) {

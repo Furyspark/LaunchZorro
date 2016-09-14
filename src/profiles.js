@@ -3,9 +3,15 @@ var $Profiles = {};
 $Profiles.profile = null;
 $Profiles.subProfiles = {};
 
-$Profiles.path = {};
-$Profiles.path.icon = {};
+$Profiles.path            = {};
+$Profiles.path.icon       = {};
 $Profiles.path.icon.blank = "icons/profiles/generic/blank.png";
+
+$Profiles.current          = {};
+$Profiles.current.lhc      = "";
+$Profiles.current.mouse    = "";
+$Profiles.current.category = "";
+$Profiles.current.profile  = "";
 
 
 $Profiles.clear = function() {
@@ -48,18 +54,20 @@ $Profiles.add = function(name) {
     iconElem.height = "32";
     elem.insertBefore(iconElem, txtElem);
   });
+  return elem;
 };
 
 $Profiles.refresh = function() {
-  var selected = this.getSelected();
-  if(selected) selected = selected.value;
   this.clear();
   var group = this.getProfiles();
   for(var a = 0;a < group.length;a++) {
     var item = group[a];
-    this.add(item);
+    var elem = this.add(item);
+    if($Core.LHCElement().value === this.current.lhc && $Core.MouseElement().value === this.current.mouse &&
+        $Categories.getSelected().value === this.current.category && item === this.current.profile) {
+      this.selectElem(elem);
+    }
   }
-  if(selected) this.select(selected);
 };
 
 $Profiles.getProfiles = function() {
@@ -136,6 +144,12 @@ $Profiles.loadProfile = function() {
     var profilePath = this.baseDir() + profileName + ".json";
 
     this.profile = new Profile(profilePath);
+
+    // Set current data
+    this.current.lhc = $Core.LHCElement().value;
+    this.current.mouse = $Core.MouseElement().value;
+    this.current.category = $Categories.getSelected().value;
+    this.current.profile = profileName;
   }
 };
 
