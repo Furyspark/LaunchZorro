@@ -1,7 +1,6 @@
 var fs = require("fs");
 var concat = require("concatenate-files");
 var packager = require("electron-packager");
-var rimraf = require("rimraf");
 var packagerOptions = {
   dir: ".",
   arch: "x64",
