@@ -138,7 +138,7 @@ button:hover {
 .group_option {
   border: 2px solid transparent;
   border-radius: 0.5em;
-  width: 128px;
+  width: 224px;
   height: 32px;
   cursor: hand;
 }
@@ -170,3 +170,9 @@ button:hover {
 #group_profiles option:nth-child(even) {
   background: #bbbbbb;
 }*/
+
+.item_group {
+  width:256px;
+  height:320px;
+  overflow-y:scroll;
+}
