@@ -32,7 +32,7 @@ Input.indexToString = function(index, e0) {
     case 26: return "vkdb"; break;
     case 27: return "vkdd"; break;
     case 28: if(e0) return "numpadenter"; return "enter"; break;
-    case 29: return "lctrl"; break;
+    case 29: if(e0) return "rctrl"; return "lctrl"; break;
     case 30: return "a"; break;
     case 31: return "s"; break;
     case 32: return "d"; break;
@@ -57,8 +57,9 @@ Input.indexToString = function(index, e0) {
     case 51: return "vkbc"; break;
     case 52: return "vkbe"; break;
     case 53: if(e0) return "vkbf"; return "numpaddiv"; break;
+    case 54: return "rshift"; break;
     case 55: if(e0) return ""; return "numpadmult"; break;
-    case 56: return "lalt"; break;
+    case 56: if(e0) return "ralt"; return "lalt"; break;
     case 57: return "space"; break;
     case 58: return "capslock"; break;
     case 59: return "f1"; break;
@@ -89,6 +90,7 @@ Input.indexToString = function(index, e0) {
     case 87: return "f11"; break;
     case 88: return "f12"; break;
     case 91: if(e0) return "lwin"; return ""; break;
+    case 92: if(e0) return "rwin"; return ""; break;
   }
 }
 
