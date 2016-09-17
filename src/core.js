@@ -204,6 +204,7 @@ $Core.detectRunning = function() {
 $Core.handleInterception = function(keyCode, keyDown, keyE0, hwid, deviceType, mouseWheel, mouseMove, x, y) {
   var keyName = "";
   if(deviceType === $Core.DEVICE_TYPE_KEYBOARD) keyName = Input.indexToString(keyCode, keyE0);
+  else if(deviceType === $Core.DEVICE_TYPE_MOUSE) keyName = Input.mouseIndexToString(keyCode);
 
   // HWID checking
   // if(keyDown && !this.isMouseMove(keyCode, mouseWheel)) console.log(hwid);

@@ -63,18 +63,18 @@ Profile.prototype.options = function() {
 Profile.prototype.handleInterception = function(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y) {
   var options = this.options();
   var coreOptions = $Core.options();
+  var sendDefault = true;
 
   if(keyName == $Core.conf.suspend_key) {
+    sendDefault = false;
     if(keyDown) this.toggleSuspend();
   }
   else {
-    if(this.suspended() || deviceType === $Core.DEVICE_TYPE_MOUSE) {
-      this.core().send_default();
-    }
-    else {
-      var deviceType = this.checkWhitelist(hwid);
-      var onWhitelist = this.usingWhitelist() ? this.isOnWhitelist(deviceType) : true;
-      var bind = this.getBind(deviceType, keyName);
+    if(!this.suspended()) {
+      sendDefault = false;
+      var deviceName = this.checkWhitelist(hwid);
+      var onWhitelist = this.usingWhitelist() ? this.isOnWhitelist(deviceName) : true;
+      var bind = this.getBind(deviceName, keyName);
       if(onWhitelist && bind) {
         // Key DOWN
         if(keyDown) {
@@ -85,11 +85,14 @@ Profile.prototype.handleInterception = function(keyCode, keyDown, keyE0, hwid, k
           this.releaseBind(bind);
         }
       }
+      else if(!bind && deviceType === $Core.DEVICE_TYPE_MOUSE) sendDefault = true;
       else if((options && (options.enableDefaults || coreOptions.enableDefaults) && !bind) || !onWhitelist) {
         this.core().send_default();
       }
     }
   }
+
+  if(sendDefault) this.core().send_default();
 }
 
 Profile.prototype.checkWhitelist = function(hwid) {
