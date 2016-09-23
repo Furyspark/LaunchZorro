@@ -72,9 +72,9 @@ Profile.prototype.handleInterception = function(keyCode, keyDown, keyE0, hwid, k
   else {
     if(!this.suspended()) {
       sendDefault = false;
-      var deviceName = this.checkWhitelist(hwid);
-      var onWhitelist = this.usingWhitelist() ? this.isOnWhitelist(deviceName) : true;
-      var bind = this.getBind(deviceName, keyName);
+      var deviceNames = this.checkWhitelist(hwid);
+      var onWhitelist = this.usingWhitelist() ? this.isOnWhitelist(deviceNames) : true;
+      var bind = this.getBind(deviceNames, keyName);
       if(onWhitelist && bind) {
         // Key DOWN
         if(keyDown) {
@@ -96,16 +96,21 @@ Profile.prototype.handleInterception = function(keyCode, keyDown, keyE0, hwid, k
 }
 
 Profile.prototype.checkWhitelist = function(hwid) {
-  if(this._whitelistLoading) return "any";
+  var result = [];
+  if(this._whitelistLoading) return [];
   for(var a in this._whitelist) {
     var obj = this._whitelist[a];
-    if(obj.indexOf(hwid) !== -1) return a;
+    if(obj.indexOf(hwid) !== -1) result.push(a);
   }
-  return "any";
+  return result;
 }
 
-Profile.prototype.isOnWhitelist = function(deviceType) {
-  return (this._whitelist[deviceType] !== undefined);
+Profile.prototype.isOnWhitelist = function(deviceTypeArr) {
+  for(var a = 0;a < deviceTypeArr.length;a++) {
+    var deviceType = deviceTypeArr[a];
+    if(this._whitelist[deviceType] !== undefined) return true;
+  }
+  return false;
 }
 
 Profile.prototype.usingWhitelist = function() {
@@ -116,30 +121,34 @@ Profile.prototype.remove = function() {
   // this.core().destroy();
 }
 
-Profile.prototype.getBind = function(deviceType, keyName) {
-  // Search held bind
-  var held = this._held[keyName];
-  var km;
-  var bind;
-  if(held) {
-    km = this.keymaps[held.keymap];
+Profile.prototype.getBind = function(deviceTypes, keyName) {
+  for(var a = 0;a < deviceTypes.length;a++) {
+    var deviceType = deviceTypes[a];
+    // Search held bind
+    var held = this._held[keyName];
+    var km;
+    var bind;
+    if(held) {
+      km = this.keymaps[held.keymap];
+      bind = km.getBind(deviceType, keyName);
+      if(bind) {
+        return bind;
+      }
+    }
+    // Search current keymap
+    km = this.keymaps[this.keymapIndex()];
+    bind = km.getBind(deviceType, keyName);
+    if(bind) {
+      return bind;
+    }
+    // Search base keymap
+    km = this.keymaps[0];
     bind = km.getBind(deviceType, keyName);
     if(bind) {
       return bind;
     }
   }
-  // Search current keymap
-  km = this.keymaps[this.keymapIndex()];
-  bind = km.getBind(deviceType, keyName);
-  if(bind) {
-    return bind;
-  }
-  // Search base keymap
-  km = this.keymaps[0];
-  bind = km.getBind(deviceType, keyName);
-  if(bind) {
-    return bind;
-  }
+  return null;
 }
 
 Profile.prototype.pressBind = function(bind) {
