@@ -6,6 +6,7 @@ body {
 
 .group {
   display: inline-block;
+  position: relative;
   vertical-align: top;
   padding: 0.4em;
   margin: 0.4em;
@@ -70,11 +71,6 @@ ul {
 
 select {
   width: 200px;
-}
-
-button {
-  width: 128px;
-  height: 24px;
 }
 
 input[type=radio] {
