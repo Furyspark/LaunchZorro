@@ -11,7 +11,8 @@ var packagerOptions = {
     /readme\.md/i,
     /sources\.json/i,
     /src/i,
-    /^profiles$/i
+    /^profiles$/i,
+    /conf\.json/
   ],
   afterCopy: [
     function(buildPath, electronVersion, platform, arch, callback) {
@@ -19,7 +20,6 @@ var packagerOptions = {
       var electronPath = pathArr.slice(0, -2).join("\/") + "/";
       fs.renameSync(buildPath + "/interception.dll", electronPath + "interception.dll");
       fs.renameSync(buildPath + "/devices.json", electronPath + "devices.json");
-      fs.renameSync(buildPath + "/conf.json", electronPath + "conf.json");
       fs.renameSync(buildPath + "/profiler", electronPath + "profiler");
       fs.renameSync(buildPath + "/icons", electronPath + "icons");
       // fs.renameSync(buildPath + "/profiles", electronPath + "profiles");
