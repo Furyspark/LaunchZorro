@@ -29,7 +29,7 @@ var packagerOptions = {
   name: "LaunchZorro",
   out: "bin",
   platform: "win32",
-  version: "1.3.5"
+  version: "1.4.1"
 };
 
 var sources = JSON.parse(fs.readFileSync("sources.json"));
