@@ -37,9 +37,40 @@ window.onload = function() {
   $Audio.addSound("deactivate_profile", "assets/audio/deactivate_profile.wav");
   $Core.start();
   // Load conf.json
-  $Core.conf = JSON.parse(fs.readFileSync("conf.json"));
+  $Core.conf = $Core.generateConfig();
+  if($Core.fileExists("conf.json")) {
+    var conf = JSON.parse(fs.readFileSync("conf.json"));
+    Object.assign($Core.conf, conf);
+  }
   $Core.onConfLoaded();
 };
+
+$Core.fileExists = function(path) {
+  try {
+    fs.accessSync(path, fs.constants.F_OK);
+  }
+  catch(e) {
+    return false;
+  }
+  return true;
+}
+
+$Core.generateConfig = function() {
+  var result = {
+    suspend_key: "f1",
+    ptt: {
+      origin: "capslock",
+      key: "scrolllock"
+    },
+    usingWhitelist: true,
+    defaultDevice: {
+      lhc: "normal",
+      mouse: "normal"
+    }
+  };
+
+  return result;
+}
 
 $Core.start = function() {
   // Add Left-Handed Controllers to the list of devices
