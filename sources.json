@@ -1,4 +1,5 @@
 [
+  "src/header.js",
   "src/signal.js",
   "src/input.js",
   "src/core.js",
@@ -9,5 +10,6 @@
   "src/categories.js",
   "src/profiles.js",
   "src/audio.js",
-  "src/profile.js"
+  "src/profile.js",
+  "src/footer.js"
 ]
