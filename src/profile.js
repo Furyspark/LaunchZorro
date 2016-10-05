@@ -102,6 +102,7 @@ Profile.prototype.checkWhitelist = function(hwid) {
     var obj = this._whitelist[a];
     if(obj.indexOf(hwid) !== -1) result.push(a);
   }
+  if(result.length === 0) result = ["any"];
   return result;
 }
 
