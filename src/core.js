@@ -115,6 +115,8 @@ $Core.start = function() {
   // $Core.initQuickField();
 
   $Categories.refresh();
+
+  $Core.setPriority();
 };
 
 $Core.onConfLoaded = function() {
@@ -138,6 +140,11 @@ $Core.onConfLoaded = function() {
     $Categories.refresh();
   }
 };
+
+$Core.setPriority = function() {
+  var app = spawn("wmic", ["process", "where", "name=\"LaunchZorro.exe\"", "CALL", "setpriority", "\"high priority\""], { shell: true });
+  console.log(app);
+}
 
 $Core.selectLHC = function(value) {
   $Core.devices.lhc[value].element.firstChild.checked = true;
