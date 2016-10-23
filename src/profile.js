@@ -61,6 +61,7 @@ Profile.prototype.options = function() {
 }
 
 Profile.prototype.handleInterception = function(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y) {
+  console.log(this);
   var options = this.options();
   var coreOptions = $Core.options();
   var sendDefault = true;

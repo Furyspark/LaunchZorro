@@ -2,7 +2,15 @@ var fs = require("fs");
 var path = require("path");
 var spawn = require("child_process").spawn;
 var exec = require("child_process").execFile;
-var interceptionJS = require("./interception/interception");
+var interceptionJS;
+var processType = "node";
+if(process && process.versions && process.versions.electron) {
+  interceptionJS = require("./interception/interception");
+  processType = "electron";
+}
+else {
+  interceptionJS = require("./interception-node/interception");
+}
 
 var $Core = {};
 
@@ -29,25 +37,9 @@ $Core.MOUSE_MOVE_REL  = 0;
 $Core.MOUSE_MOVE_ABS  = 1;
 
 
-window.onload = function() {
-  $Audio.addSound("reload", "assets/audio/profiler_reload.wav");
-  $Audio.addSound("unload", "assets/audio/profiler_unload.wav");
-  $Audio.addSound("refresh", "assets/audio/profiler_refresh.wav");
-  $Audio.addSound("activate_profile", "assets/audio/activate_profile.wav");
-  $Audio.addSound("deactivate_profile", "assets/audio/deactivate_profile.wav");
-  $Core.start();
-  // Load conf.json
-  $Core.conf = $Core.generateConfig();
-  if($Core.fileExists("conf.json")) {
-    var conf = JSON.parse(fs.readFileSync("conf.json"));
-    Object.assign($Core.conf, conf);
-  }
-  $Core.onConfLoaded();
-};
-
 $Core.fileExists = function(path) {
   try {
-    fs.accessSync(path, fs.constants.F_OK);
+    fs.accessSync(path, fs.constants.R_OK);
   }
   catch(e) {
     return false;
@@ -74,39 +66,41 @@ $Core.generateConfig = function() {
 
 $Core.start = function() {
   // Add Left-Handed Controllers to the list of devices
-  var groups = ["lhc", "mice"];
-  for(var a = 0;a < groups.length;a++) {
-    var groupName = groups[a];
-    var group = $Core.devices.list[groupName];
-    for(var b = 0;b < group.length;b++) {
-      var device = group[b];
+  if(processType !== "node") {
+    var groups = ["lhc", "mice"];
+    for(var a = 0;a < groups.length;a++) {
+      var groupName = groups[a];
+      var group = $Core.devices.list[groupName];
+      for(var b = 0;b < group.length;b++) {
+        var device = group[b];
 
-      // Create element
-      var elem = $Core.addRadioButton("group_" + groupName, device.dirName, groupName, device.name);
-      // Add click event
-      if(groupName === "lhc") {
-        elem.onchange = function() {
-          $Core.onLHCSelect();
+        // Create element
+        var elem = $Core.addRadioButton("group_" + groupName, device.dirName, groupName, device.name);
+        // Add click event
+        if(groupName === "lhc") {
+          elem.onchange = function() {
+            $Core.onLHCSelect();
+          };
+        } else if(groupName === "mice") {
+          elem.onchange = function() {
+            $Core.onMouseSelect();
+          };
+        }
+
+        // Set default check
+        elem.firstChild.checked = false;
+        if(b === 0) {
+          elem.firstChild.checked = true;
+        }
+
+        // Append to list
+        var obj = {
+          name: device.name,
+          dirName: device.dirName,
+          element: elem
         };
-      } else if(groupName === "mice") {
-        elem.onchange = function() {
-          $Core.onMouseSelect();
-        };
+        $Core.devices[groupName][device.dirName] = obj;
       }
-
-      // Set default check
-      elem.firstChild.checked = false;
-      if(b === 0) {
-        elem.firstChild.checked = true;
-      }
-
-      // Append to list
-      var obj = {
-        name: device.name,
-        dirName: device.dirName,
-        element: elem
-      };
-      $Core.devices[groupName][device.dirName] = obj;
     }
   }
 
@@ -114,36 +108,42 @@ $Core.start = function() {
   $Core.handler.start($Core.handleInterception.bind($Core));
   // $Core.initQuickField();
 
-  $Categories.refresh();
+  if(processType !== "node") {
+    $Categories.refresh();
+  }
 
   $Core.setPriority();
 };
 
 $Core.onConfLoaded = function() {
-  var conf = $Core.conf;
-  var doRefresh = false;
-  if(conf.defaultDevice && conf.defaultDevice.lhc) {
-    $Core.selectLHC(conf.defaultDevice.lhc);
-    doRefresh = true;
-  }
-  if(conf.defaultDevice && conf.defaultDevice.mouse) {
-    $Core.selectMouse(conf.defaultDevice.mouse);
-    doRefresh = true;
-  }
-  if(conf.usingWhitelist === true) {
-    var elem = document.getElementById("profile-whitelist");
-    elem.checked = true;
-  }
+  if(processType !== "node") {
+    var conf = $Core.conf;
+    var doRefresh = false;
+    if(conf.defaultDevice && conf.defaultDevice.lhc) {
+      $Core.selectLHC(conf.defaultDevice.lhc);
+      doRefresh = true;
+    }
+    if(conf.defaultDevice && conf.defaultDevice.mouse) {
+      $Core.selectMouse(conf.defaultDevice.mouse);
+      doRefresh = true;
+    }
+    if(conf.usingWhitelist === true) {
+      var elem = document.getElementById("profile-whitelist");
+      elem.checked = true;
+    }
 
-  if(doRefresh) {
-    $Profiles.clear();
-    $Categories.refresh();
+    if(doRefresh) {
+      $Profiles.clear();
+      $Categories.refresh();
+    }
+  }
+  else {
+
   }
 };
 
 $Core.setPriority = function() {
-  var app = spawn("wmic", ["process", "where", "name=\"LaunchZorro.exe\"", "CALL", "setpriority", "\"high priority\""], { shell: true });
-  console.log(app);
+  if(processType !== "node") var app = spawn("wmic", ["process", "where", "name=\"LaunchZorro.exe\"", "CALL", "setpriority", "\"high priority\""], { shell: true });
 }
 
 $Core.selectLHC = function(value) {
@@ -245,7 +245,7 @@ $Core.handleInterception = function(keyCode, keyDown, keyE0, hwid, deviceType, m
   else if(deviceType === $Core.DEVICE_TYPE_MOUSE) keyName = Input.mouseIndexToString(keyCode);
 
   // HWID checking
-  // if(keyDown && !this.isMouseMove(keyCode, mouseWheel)) console.log(hwid);
+  if(keyDown && !this.isMouseMove(keyCode, mouseWheel)) console.log(hwid);
 
   if(this.conf && this.conf.ptt && this.conf.ptt.origin && keyName === this.conf.ptt.origin) {
     this.handler.send(this.conf.ptt.key, keyDown);
@@ -279,8 +279,13 @@ $Core.parseTasks = function(tasks) {
 }
 
 $Core.options = function() {
+  if(processType !== "node") {
+    return {
+      enableDefaults: document.getElementById("profile-enable-defaults").checked
+    };
+  }
   return {
-    enableDefaults: document.getElementById("profile-enable-defaults").checked
+    enableDefaults: false
   };
 }
 

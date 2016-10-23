@@ -136,22 +136,28 @@ $Profiles.onSelect = function() {
   this.loadProfile();
 };
 
-$Profiles.loadProfile = function() {
-  var selected = this.getSelected();
-  if(selected && this.baseDir() !== "") {
-    var profileName = selected.value;
-    this.setProfileInfo(profileName);
-    var profilePath = this.baseDir() + profileName + ".json";
+$Profiles.loadProfile = function(url) {
+  if(!url) {
+    var selected = this.getSelected();
+    if(selected && this.baseDir() !== "") {
+      var profileName = selected.value;
+      this.setProfileInfo(profileName);
+      var profilePath = this.baseDir() + profileName + ".json";
 
-    this.profile = new Profile(profilePath);
+      this.profile = new Profile(profilePath);
 
-    // Set current data
-    this.current.lhc = $Core.LHCElement().value;
-    this.current.mouse = $Core.MouseElement().value;
-    this.current.category = $Categories.getSelected().value;
-    this.current.profile = profileName;
+      // Set current data
+      this.current.lhc = $Core.LHCElement().value;
+      this.current.mouse = $Core.MouseElement().value;
+      this.current.category = $Categories.getSelected().value;
+      this.current.profile = profileName;
+    }
   }
-};
+  else {
+    var profilePath = "profiles/" + url + ".json";
+    this.profile = new Profile(profilePath);
+  }
+}
 
 $Profiles.closeProfile = function() {
   if(this.profile) {
