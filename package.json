@@ -3,7 +3,8 @@
   "name": "launchzorro",
   "private": true,
   "scripts": {
-    "test": "node compile.js & electron ."
+    "test": "node compile.js && electron .",
+    "test-cmd": "node compile.js && node app.js category=\"MMO\" profile=\"World of Warcraft\""
   },
   "devDependencies": {
     "concatenate-files": "^0.1.1",
