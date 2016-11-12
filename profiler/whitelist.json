@@ -15,7 +15,7 @@
     "HID\\VID_046D&PID_C232"
   ],
   "scimitar": [
-    "HID\\VID_04D9&PID_0132&REV_0110&MI_02&Col04",
+    "HID\\VID_1B1C&PID_1B1E&REV_0203&MI_01&Col01",
     "HID\\virtualdevice&Col03"
   ]
 }
