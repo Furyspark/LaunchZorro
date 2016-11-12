@@ -314,3 +314,7 @@ $Core.initQuickField = function() {
     groupElem.appendChild(elem);
   }
 }
+
+$Core.destroyInterception = function() {
+  this.handler.destroy();
+}

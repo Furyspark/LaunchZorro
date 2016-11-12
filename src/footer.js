@@ -1,5 +1,5 @@
 process.on("exit", function() {
-  interceptionJS.destroy();
+  $Core.destroyInterception();
 });
 
 
