@@ -37,14 +37,20 @@ $Core.MOUSE_MOVE_REL  = 0;
 $Core.MOUSE_MOVE_ABS  = 1;
 
 
-$Core.fileExists = function(path) {
-  try {
-    fs.accessSync(path, fs.constants.R_OK);
-  }
-  catch(e) {
-    return false;
-  }
-  return true;
+$Core.fileExists = function(path, callback) {
+  fs.access(path, fs.constants.R_OK, function(err) {
+    var result = true;
+    if(err) result = false;
+    callback(result);
+  });
+}
+
+$Core.isDirectory = function(path, callback) {
+  fs.lstat(path, function(err, stats) {
+    var result = false;
+    if(stats.isDirectory()) result = true;
+    callback(result);
+  });
 }
 
 $Core.generateConfig = function() {

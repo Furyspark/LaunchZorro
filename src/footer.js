@@ -13,20 +13,24 @@ if(processType !== "node") {
     $Core.start();
     // Load conf.json
     $Core.conf = $Core.generateConfig();
-    if($Core.fileExists("conf.json")) {
-      var conf = JSON.parse(fs.readFileSync("conf.json"));
-      Object.assign($Core.conf, conf);
-    }
-    $Core.onConfLoaded();
+    $Core.fileExists("conf.json", function(result) {
+      if(result) {
+        var conf = JSON.parse(fs.readFileSync("conf.json"));
+        Object.assign($Core.conf, conf);
+      }
+      $Core.onConfLoaded();
+    });
   };
 }
 else {
   $Core.start();
-  if($Core.fileExists("conf.json")) {
-    var conf = JSON.parse(fs.readFileSync("conf.json"));
-    Object.assign($Core.conf, conf);
-  }
-  $Core.onConfLoaded();
+  $Core.fileExists("conf.json", function(result) {
+    if(result) {
+      var conf = JSON.parse(fs.readFileSync("conf.json"));
+      Object.assign($Core.conf, conf);
+    }
+    $Core.onConfLoaded();
+  });
   // Auto load profile
   if(!cmdArgs.lhc) {
     cmdArgs.lhc = $Core.conf.defaultDevice.lhc;
