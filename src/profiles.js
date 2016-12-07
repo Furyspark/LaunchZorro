@@ -154,8 +154,20 @@ $Profiles.loadProfile = function(url) {
     }
   }
   else {
+    var dirs = url.split(/[\/\\]/);
+    var mouse = dirs[0];
+    var lhc = dirs[1];
+    var category = dirs[2];
+    var profileName = dirs[3];
     var profilePath = "profiles/" + url + ".json";
     this.profile = new Profile(profilePath);
+    this.setProfileInfo(profileName);
+    // Set current data
+    this.current.mouse = mouse;
+    this.current.lhc = lhc;
+    this.current.category = category;
+    this.current.profile = profileName;
+    this.refresh();
   }
 }
 

@@ -113,6 +113,14 @@ Sequence.prototype.continue = function() {
         instantContinue = false;
         this._timer = window.setTimeout(this.continue.bind(this), details.value);
         break;
+      case "loadprofile":
+        var mouseDir = $Core.devices.mice[$Core.MouseElement().value].dirName;
+        var lhcDir = $Core.devices.lhc[$Core.LHCElement().value].dirName;
+        var catDir = details.category;
+        var profileName = details.filename;
+        var url = mouseDir + "/" + lhcDir + "/" + catDir + "/" + profileName;
+        $Profiles.loadProfile(url);
+        break;
     }
   }
 

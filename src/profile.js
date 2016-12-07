@@ -10,7 +10,6 @@ Profile.prototype.initialize = function(url) {
 }
 
 Profile.prototype.initMembers = function() {
-  // this._core = null;
   this._source = null;
   this._suspended = false;
   this.keymaps = [];
@@ -19,6 +18,7 @@ Profile.prototype.initMembers = function() {
   this._whitelist = null;
   this._whitelistLoading = false;
   this._mouseFuncHeld = [];
+  this._bindDb = {};
 }
 
 Profile.prototype.core = function() {
@@ -46,7 +46,7 @@ Profile.prototype.loadProfile = function(url) {
 Profile.prototype.applySource = function() {
   var src = this.source();
   for(var a = 0;a < src.keymaps.length;a++) {
-    var km = new Keymap(this);
+    var km = new Keymap(this, a);
     km.applySource(src.keymaps[a], src.bindings[a]);
     this.keymaps.push(km);
   }
@@ -57,39 +57,40 @@ Profile.prototype.source = function() {
 }
 
 Profile.prototype.options = function() {
-  return this.source().options;
+  if(this.source()) return this.source().options;
+  return null;
 }
 
-Profile.prototype.handleInterception = function(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y) {
-  console.log(this);
+Profile.prototype.handleInterception = function(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y, config) {
   var options = this.options();
+  if(!options) {
+    this.core().send_default();
+    return;
+  }
   var coreOptions = $Core.options();
   var sendDefault = true;
+  var ignoreWhitelist = false;
+  if(config && config.ignoreWhitelist) ignoreWhitelist = true;
 
-  if(keyName == $Core.conf.suspend_key) {
+  if(!this.suspended()) {
     sendDefault = false;
-    if(keyDown) this.toggleSuspend();
-  }
-  else {
-    if(!this.suspended()) {
-      sendDefault = false;
-      var deviceNames = this.checkWhitelist(hwid);
-      var onWhitelist = this.usingWhitelist() ? this.isOnWhitelist(deviceNames) : true;
-      var bind = this.getBind(deviceNames, keyName);
-      if(onWhitelist && bind) {
-        // Key DOWN
-        if(keyDown) {
-          this.pressBind(bind);
-        }
-        // Key UP
-        else {
-          this.releaseBind(bind);
-        }
+    var deviceNames = this.checkWhitelist(hwid);
+    var onWhitelist = this.usingWhitelist() ? this.isOnWhitelist(deviceNames) : true;
+    if(ignoreWhitelist) onWhitelist = true;
+    var bind = this.getBind(deviceNames, keyName);
+    if(onWhitelist && bind) {
+      // Key DOWN
+      if(keyDown) {
+        this.pressBind(bind);
       }
-      else if(!bind && deviceType === $Core.DEVICE_TYPE_MOUSE) sendDefault = true;
-      else if((options && (options.enableDefaults || coreOptions.enableDefaults) && !bind) || !onWhitelist) {
-        this.core().send_default();
+      // Key UP
+      else {
+        this.releaseBind(bind);
       }
+    }
+    else if(!bind && deviceType === $Core.DEVICE_TYPE_MOUSE) sendDefault = true;
+    else if((options && (options.enableDefaults || coreOptions.enableDefaults) && !bind) || !onWhitelist) {
+      this.core().send_default();
     }
   }
 
@@ -121,6 +122,28 @@ Profile.prototype.usingWhitelist = function() {
 
 Profile.prototype.remove = function() {
   // this.core().destroy();
+}
+
+Profile.prototype.hasBind = function(origin) {
+  for(var a in this._bindDb) {
+    var km = this._bindDb[a];
+    if(km.indexOf(origin) !== -1) return true;
+  }
+  return false;
+}
+
+Profile.prototype.hasBindInKeymap = function(origin, keymapIndex) {
+  var km = this._bindDb[keymapIndex];
+  if(!km) return false;
+  if(km.indexOf(origin) !== -1) return true;
+  return false;
+}
+
+Profile.prototype.hasActiveBind = function(origin) {
+  if(this.hasBindInKeymap(origin, 0)) return true;
+  if(this._keymapIndex > 0 && this.hasBindInKeymap(origin, this._keymapIndex)) return true;
+  if(this._held[origin]) return true;
+  return false;
 }
 
 Profile.prototype.getBind = function(deviceTypes, keyName) {

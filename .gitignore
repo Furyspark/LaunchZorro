@@ -4,3 +4,4 @@ node_modules
 .atom-build.json
 app.js
 conf.json
+*.sublime-*

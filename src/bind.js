@@ -126,11 +126,18 @@ Bind.prototype.applySource = function(src) {
     this.hwid = src.hardware_id;
   }
 
+  // Keymap
   if(src.key.match(/KEYMAP([0-9]+)/i)) {
     var i = parseInt(RegExp.$1);
     this.sequence.down.addAction(new Action("keymap", i-1));
     this.sequence.up.addAction(new Action("keymap", 0));
   }
+  // Extra Action
+  else if(src.key.match(/EA:(.+)/i)) {
+    var action = RegExp.$1;
+    this.parseExtraAction(action, src);
+  }
+  // Normal Key
   else {
     this.sequence.down.addAction(new Action("key", src.key, true));
     if(jra) {
@@ -149,6 +156,11 @@ Bind.prototype.applySource = function(src) {
   }
 
   this.origin = src.origin;
+  var kmI = this.keymap()._keymapIndex;
+  if(!this.profile().hasBindInKeymap(this.origin, kmI)) {
+    if(this.profile()._bindDb[kmI]) this.profile()._bindDb[kmI].push(this.origin);
+    else this.profile()._bindDb[kmI] = [this.origin];
+  }
 
   if(doAlt) this.sequence.up.addAction(new Action("key", "lalt", false));
   if(doCtrl) this.sequence.up.addAction(new Action("key", "lctrl", false));
@@ -163,5 +175,11 @@ Bind.prototype.applySource = function(src) {
     if((typeof src.toggle === "string" && src.toggle === "1") ||
     (typeof src.toggle === "number" && src.toggle === 1) ||
     (typeof src.toggle === "boolean" && src.toggle === true)) this._toggle = true;
+  }
+}
+
+Bind.prototype.parseExtraAction = function(action, src) {
+  if(action.toUpperCase() === "LOADPROFILE") {
+    this.sequence.up.addAction(new Action("loadprofile", src.extra_params[0], src.extra_params[1]));
   }
 }

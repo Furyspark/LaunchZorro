@@ -2,15 +2,10 @@ var fs = require("fs");
 var path = require("path");
 var spawn = require("child_process").spawn;
 var exec = require("child_process").execFile;
-var interceptionJS;
-var processType = "node";
-if(process && process.versions && process.versions.electron) {
-  interceptionJS = require("./interception/interception");
-  processType = "electron";
-}
-else {
-  interceptionJS = require("./interception-node/interception");
-}
+var interceptionJS = require("./interception/interception");
+var processType = "electron";
+var electron = require("electron");
+var ipcRenderer = electron.ipcRenderer;
 
 var $Core = {};
 
@@ -35,6 +30,9 @@ $Core.MOUSE_WHEEL_H    = 2;
 
 $Core.MOUSE_MOVE_REL  = 0;
 $Core.MOUSE_MOVE_ABS  = 1;
+
+$Core._superGlobalProfile = null;
+$Core._globalProfile = null;
 
 
 $Core.fileExists = function(path, callback) {
@@ -70,7 +68,24 @@ $Core.generateConfig = function() {
   return result;
 }
 
+$Core.loadGlobalProfiles = function() {
+  // Load super global profile
+  this.fileExists("profiles/global.json", function(result) {
+    this._superGlobalProfile = null;
+    if(result) this._superGlobalProfile = new Profile("profiles/global.json");
+  }.bind(this));
+  // Load global profile
+  var mouseDir = this.devices.mice[this.MouseElement().value].dirName;
+  var lhcDir = this.devices.lhc[this.LHCElement().value].dirName;
+  var profilePath = "profiles/" + mouseDir + "/" + lhcDir + "/global.json";
+  this.fileExists(profilePath, function(result) {
+    this._globalProfile = null;
+    if(result) this._globalProfile = new Profile(profilePath);
+  }.bind(this));
+}
+
 $Core.start = function() {
+  this._closing = false;
   // Add Left-Handed Controllers to the list of devices
   if(processType !== "node") {
     var groups = ["lhc", "mice"];
@@ -114,11 +129,9 @@ $Core.start = function() {
   $Core.handler.start($Core.handleInterception.bind($Core));
   // $Core.initQuickField();
 
-  if(processType !== "node") {
-    $Categories.refresh();
-  }
+  $Categories.refresh();
 
-  $Core.setPriority();
+  // $Core.setPriority();
 };
 
 $Core.onConfLoaded = function() {
@@ -146,6 +159,7 @@ $Core.onConfLoaded = function() {
   else {
 
   }
+  $Core.loadGlobalProfiles();
 };
 
 $Core.setPriority = function() {
@@ -165,6 +179,7 @@ $Core.onLHCSelect = function() {
   $Categories.refresh();
   $Core.conf.defaultDevice = $Core.conf.defaultDevice || {};
   $Core.conf.defaultDevice.lhc = $Core.LHCElement().value;
+  $Core.loadGlobalProfiles();
   $Core.saveConfig();
 };
 
@@ -173,6 +188,7 @@ $Core.onMouseSelect = function() {
   $Categories.refresh();
   $Core.conf.defaultDevice = $Core.conf.defaultDevice || {};
   $Core.conf.defaultDevice.mouse = $Core.MouseElement().value;
+  $Core.loadGlobalProfiles();
   $Core.saveConfig();
 };
 
@@ -223,6 +239,7 @@ $Core.unloadProfile = function() {
 };
 
 $Core.reloadProfile = function() {
+  this.loadGlobalProfiles();
   $Profiles.loadProfile();
   $Audio.play("reload");
 };
@@ -245,25 +262,39 @@ $Core.detectRunning = function() {
   });
 }
 
+$Core.profileStack = function() {
+  var stack = [];
+  if(this._superGlobalProfile) stack.push(this._superGlobalProfile);
+  if(this._globalProfile) stack.push(this._globalProfile);
+  if($Profiles.profile) stack.push($Profile.profile);
+  return stack;
+}
+
 $Core.handleInterception = function(keyCode, keyDown, keyE0, hwid, deviceType, mouseWheel, mouseMove, x, y) {
   var keyName = "";
   if(deviceType === $Core.DEVICE_TYPE_KEYBOARD) keyName = Input.indexToString(keyCode, keyE0);
   else if(deviceType === $Core.DEVICE_TYPE_MOUSE) keyName = Input.mouseIndexToString(keyCode);
 
   // HWID checking
-  if(keyDown && !this.isMouseMove(keyCode, mouseWheel)) console.log(hwid);
+  // if(keyDown && !this.isMouseMove(keyCode, mouseWheel)) console.log(hwid);
 
-  if(this.conf && this.conf.ptt && this.conf.ptt.origin && keyName === this.conf.ptt.origin) {
-    this.handler.send(this.conf.ptt.key, keyDown);
+  var sendDefault = true;
+
+  var prof = $Profiles.profile;
+  if(this._superGlobalProfile && this._superGlobalProfile.hasActiveBind(keyName)) {
+    sendDefault = false;
+    this._superGlobalProfile.handleInterception(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y, { ignoreWhitelist: true });
   }
-  else {
-    var prof = $Profiles.profile;
-    if(prof) {
-      prof.handleInterception(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y);
-    }
-    else {
-      this.handler.send_default();
-    }
+  else if(this._globalProfile && this._globalProfile.hasActiveBind(keyName)) {
+    sendDefault = false;
+    this._globalProfile.handleInterception(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y);
+  }
+  else if(prof) {
+    sendDefault = false;
+    prof.handleInterception(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y);
+  }
+  if(sendDefault) {
+    this.handler.send_default();
   }
 }
 
@@ -323,4 +354,29 @@ $Core.initQuickField = function() {
 
 $Core.destroyInterception = function() {
   this.handler.destroy();
+}
+
+
+//-------------------------------------------------------------------
+// Events
+//
+
+ipcRenderer.on("core", function(event, args) {
+  if(args.length > 0) {
+    var cmd = args.splice(0, 1)[0];
+    switch(cmd.toUpperCase()) {
+      case "CLOSE":
+        $Core._closing = true;
+        ipcRenderer.send("core", ["close"]);
+        break;
+    }
+  }
+});
+
+
+window.onbeforeunload = function(event) {
+  if(!$Core._closing) {
+    ipcRenderer.send("core", ["window", "hide"]);
+    event.returnValue = false;
+  }
 }

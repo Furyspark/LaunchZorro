@@ -17,6 +17,10 @@ Action.prototype.initialize = function(type) {
   else if(type === "keymap") {
     this.value = arguments[1];
   }
+  else if(type === "loadprofile") {
+    this.extraParams[0] = arguments[1];
+    this.extraParams[1] = arguments[2];
+  }
 }
 
 Action.prototype.initMembers = function() {
@@ -24,6 +28,7 @@ Action.prototype.initMembers = function() {
   this.keyName = "";
   this.keyDown = true;
   this.value = 0;
+  this.extraParams = [];
 }
 
 Action.prototype.get = function() {
@@ -36,6 +41,9 @@ Action.prototype.get = function() {
       break;
     case "delay":
       return { type: "delay", value: this.value };
+      break;
+    case "loadprofile":
+      return { type: "loadprofile", category: this.extraParams[0], filename: this.extraParams[1] };
       break;
   }
 }
