@@ -290,8 +290,16 @@ $Core.handleInterception = function(keyCode, keyDown, keyE0, hwid, deviceType, m
     this._globalProfile.handleInterception(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y);
   }
   else if(prof) {
-    sendDefault = false;
-    prof.handleInterception(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y);
+    if(keyName === this.conf.suspend_key) {
+      if(keyDown) {
+        sendDefault = false;
+        prof.toggleSuspend();
+      }
+    }
+    else if(!prof.suspended()) {
+      sendDefault = false;
+      prof.handleInterception(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y);
+    }
   }
   if(sendDefault) {
     this.handler.send_default();
