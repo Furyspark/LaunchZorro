@@ -14,6 +14,7 @@ app.on("ready", function() {
   tray = new Tray("profiler.png");
   var contextMenu = Menu.buildFromTemplate([
     { label: "Show", click: function() { mainWindow.show(); } },
+    { label: "Editor", click: function() { createEditorWindow(); } },
     { label: "Quit", click: function() { mainWindow.webContents.send("core", ["close"]); } }
   ]);
   tray.setToolTip("LaunchZorro");
