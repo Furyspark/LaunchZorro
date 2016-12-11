@@ -356,15 +356,6 @@ Core.setExtraParamInputs = function(bind, params) {
     var obj = params[a];
     var key = "extraparam" + a.toString() + "_" + obj.type;
     this.createExtraParam_Text(bind, a, obj);
-    // Label
-    // if(obj.type !== "text") {
-    //   var elem = document.createElement("label");
-    //   elem.for = key;
-    //   elem.id = "extraparam" + a.toString() + "_label";
-    //   elem.className = "extraparam_label";
-    //   elem.innerHTML = obj.name;
-    //   parentElem.appendChild(elem);
-    // }
   }
 }
 
