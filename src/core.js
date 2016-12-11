@@ -238,16 +238,18 @@ $Core.unloadProfile = function() {
   $Audio.play("unload");
 };
 
-$Core.reloadProfile = function() {
+$Core.reloadProfile = function(noSound) {
+  if(!noSound && noSound !== false) noSound = false;
   this.loadGlobalProfiles();
   $Profiles.loadProfile();
-  $Audio.play("reload");
+  if(!noSound) $Audio.play("reload");
 };
 
-$Core.refreshProfiles = function() {
+$Core.refreshProfiles = function(noSound) {
+  if(!noSound && noSound !== false) noSound = false;
   $Categories.refresh();
   $Profiles.refresh();
-  $Audio.play("refresh");
+  if(!noSound) $Audio.play("refresh");
 };
 
 $Core.detectRunning = function() {
@@ -364,6 +366,10 @@ $Core.destroyInterception = function() {
   this.handler.destroy();
 }
 
+$Core.openEditor = function() {
+  ipcRenderer.send("core", ["editor", "open"]);
+}
+
 
 //-------------------------------------------------------------------
 // Events
@@ -376,6 +382,9 @@ ipcRenderer.on("core", function(event, args) {
       case "CLOSE":
         $Core._closing = true;
         ipcRenderer.send("core", ["close"]);
+        break;
+      case "PROFILE":
+        if(args.length > 0 && args[0].toUpperCase() === "RELOAD") $Core.reloadProfile(false);
         break;
     }
   }

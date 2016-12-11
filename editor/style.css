@@ -1,0 +1,130 @@
+body {
+  background: #21252b;
+  margin: 0;
+  padding: 0;
+}
+
+.group {
+  display: inline-block;
+  position: relative;
+  vertical-align: top;
+  padding: 0.4em;
+  margin: 0.4em;
+  border: 1px solid #181a1f;
+  border-radius: 0.5em;
+  background: #282c34;
+  color: #abb2b1;
+}
+
+button {
+  border: 1px solid black;
+  border-radius: 0.4em;
+  font-family: Arial;
+  color: #abb2b1;
+  background: #414855;
+  text-decoration: none;
+  width: 128px;
+  height: 24px;
+  transition: background 0.5s, color 0.5s, border-radius 0.5s;
+}
+
+button:focus {
+  outline: 0;
+}
+
+button:hover {
+  background: #9fafcf;
+  color: #4e5666;
+  border-radius: 0.8em;
+}
+
+#group_main {
+  width: 36em;
+  height: 6em;
+}
+
+#group_keymaps {
+  width: 32em;
+  height: 12em;
+}
+
+#group_buttons {
+  width: 60em;
+  height: 30em;
+}
+
+#group_action {
+  width: 36em;
+  height: 16em;
+}
+
+#group_deviceselection {
+  width: 14em;
+  height: 10em;
+}
+
+#group_extraactions {
+  width: 30em;
+  height: 30em;
+}
+
+#profile-name {
+  font-family: monospace;
+  font-size: 20px;
+  padding: 0;
+  margin: 0;
+}
+
+#keymap-select {
+  width: 13em;
+  height: 9em;
+}
+
+#bind-select {
+  width: 22em;
+  height: 9em;
+}
+
+
+/* Action Elements */
+#bind-label-edit {
+  width: 16em;
+  margin: 1em;
+}
+
+#bind-ctrl-label {
+  margin: 1em;
+  margin-left: 0;
+}
+
+#bind-ctrl {
+  margin-right: 0;
+}
+
+#bind-alt-label {
+  margin: 1em;
+  margin-left: 0;
+}
+
+#bind-alt {
+  margin-right: 0;
+}
+
+#bind-shift-label {
+  margin: 1em;
+  margin-left: 0;
+}
+
+#bind-shift {
+  margin-right: 0;
+}
+
+#bind-rapidfire {
+  margin: 1em;
+}
+
+
+/* Extra Actions */
+.extraparam_text {
+  margin: 1em;
+}

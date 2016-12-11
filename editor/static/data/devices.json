@@ -1,0 +1,38 @@
+{
+  "lhc": [
+    {
+      "name": "Keyboard",
+      "dirName": "normal"
+    },
+    {
+      "name": "Orbweaver",
+      "dirName": "orbweaver"
+    },
+    {
+      "name": "G13",
+      "dirName": "g13"
+    }
+  ],
+  "mice": [
+    {
+      "name": "Normal",
+      "dirName": "normal"
+    },
+    {
+      "name": "Naga",
+      "dirName": "naga"
+    },
+    {
+      "name": "G600",
+      "dirName": "g600"
+    },
+    {
+      "name": "Nyth",
+      "dirName": "nyth"
+    },
+    {
+      "name": "Scimitar",
+      "dirName": "scimitar"
+    }
+  ]
+}

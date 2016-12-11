@@ -48,9 +48,50 @@ function copyFile(src, dest, callback) {
   });
 }
 
-var sources = JSON.parse(fs.readFileSync("sources.json"));
+var sources = [
+  "src/header.js",
+  "src/signal.js",
+  "src/input.js",
+  "src/core.js",
+  "src/keymap.js",
+  "src/bind.js",
+  "src/sequence.js",
+  "src/action.js",
+  "src/categories.js",
+  "src/profiles.js",
+  "src/audio.js",
+  "src/profile.js",
+  "src/footer.js"
+];
 
+var editorSources = [
+  "src/editor/header.js",
+  "src/editor/core.js",
+  "src/editor/saver.js",
+  "src/editor/classes/profile.js",
+  "src/editor/classes/keymap.js",
+  "src/editor/classes/bind.js",
+  "src/editor/classes/button_layout.js",
+  "src/editor/classes/button.js",
+  "src/editor/footer.js"
+];
+
+var fileCount = 2;
 concat(sources, "app.js", {}, function() {
+  fileCount--;
+  if(fileCount === 0) {
+    Package();
+  }
+});
+
+concat(editorSources, "editor/app.js", {}, function() {
+  fileCount--;
+  if(fileCount === 0) {
+    Package();
+  }
+});
+
+function Package() {
   packager(packagerOptions, function(err, appPaths) {
     if(err) console.log(err);
     for(var a = 0;a < appPaths.length;a++) {
@@ -61,4 +102,4 @@ concat(sources, "app.js", {}, function() {
       }
     }
   });
-});
+}

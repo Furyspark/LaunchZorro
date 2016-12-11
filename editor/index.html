@@ -1,0 +1,84 @@
+<html>
+  <head>
+    <title>Editzorro</title>
+    <link rel="stylesheet" href="style.css">
+
+    <script type="text/javascript" src="app.js"></script>
+  </head>
+
+  <body>
+    <div class="group" id="group_main">
+      <h2 style="cursor:default" id="profile-name"></h2>
+      <button onclick="Core.buttonNew();">New</button>
+      <button onclick="Core.buttonLoad();">Load</button>
+      <button onclick="Core.buttonSave();">Save</button>
+      <button onclick="Core.buttonSaveAs();">Save As</button>
+      <br>
+
+      <!-- Enable Defaults -->
+      <input type="checkbox" id="profile-enable-defaults"/>
+      <label for="profile-enable-defaults" id="profile-enable-defaults-label">Enable Defaults</label>
+
+      <input style="display:none" id="loadProfileDialog" type="file" accept=".json"/>
+      <input style="display:none" id="saveProfileDialog" type="file" nwsaveas/>
+    </div>
+
+    <div class="group" id="group_keymaps">
+      <input type="text" id="keymap-label-edit" oninput="Core.inputKeymapLabel();" placeholder="Label"></input>
+      <br>
+      <select multiple id="keymap-select" onclick="Core.selectKeymap();"></select>
+      <select multiple id="bind-select" onclick="Core.selectBind();"></select>
+      <br>
+      <button onclick="Core.buttonAddKeymap();">Add Keymap</button>
+      <button onclick="Core.buttonRemoveKeymap();">Remove Keymap</button>
+      <button onclick="Core.buttonRemoveBind();">Remove Bind</button>
+    </div>
+
+    <div class="group" id="group_action">
+      <!-- Label -->
+      <input type="text" id="bind-label-edit" oninput="Core.inputBindRefresh();" placeholder="Label"></input>
+      <!-- Target -->
+      <span id="bind-target"></span>
+      <br>
+      <!-- Ctrl -->
+      <input type="checkbox" id="bind-ctrl" onclick="Core.inputBindRefresh();"/>
+      <label for="bind-ctrl" id="bind-ctrl-label">Ctrl</label>
+      <!-- Shift -->
+      <input type="checkbox" id="bind-shift" onclick="Core.inputBindRefresh();"/>
+      <label for="bind-shift" id="bind-shift-label">Shift</label>
+      <!-- Alt -->
+      <input type="checkbox" id="bind-alt" onclick="Core.inputBindRefresh();"/>
+      <label for="bind-alt" id="bind-alt-label">Alt</label>
+      <br>
+      <!-- Rapidfire -->
+      <input type="text" id="bind-rapidfire" oninput="Core.inputBindRefresh();" placeholder="Rapidfire"></input>
+      <br>
+      <!-- Toggle -->
+      <input type="checkbox" id="bind-toggle" onclick="Core.inputBindRefresh();"/>
+      <label for="bind-toggle" id="bind-toggle-label">Toggle</label>
+      <!-- Japanese Run Assist -->
+      <input type="checkbox" id="bind-jra" onclick="Core.inputBindRefresh();"/>
+      <label for="bind-jra" id="bind-jra-label">JRA</label>
+      <br>
+    </div>
+
+    <div class="group" id="group_buttons">
+      <span id="button-info" style="position:absolute;width:100%;top:380px;text-align:center"></span>
+      <button onclick="Core.extendedBind();" style="position:absolute;top:350px;left:820px">Custom</button>
+      <button onclick="Core.cancelBind();" style="position:absolute;top:380px;left:820px">Deselect</button>
+    </div>
+
+    <div class="group" id="group_deviceselection">
+      <select style="position:absolute;left:4px;top:4px;width:160px" id="hw-select-mice" onclick="Core.inputButtonLayoutRefresh();">
+        <option>[Mice]</option>
+      </select>
+      <select style="position:absolute;left:4px;top:32px;width:160px" id="hw-select-lhc" onclick="Core.inputButtonLayoutRefresh();">
+        <option>[LHC]</option>
+      </select>
+    </div>
+
+    <div class="group" id="group_extraactions">
+      <button onclick="Core.extraAction('loadprofile');">Load Profile</button>
+    </div>
+  </body>
+</html>
