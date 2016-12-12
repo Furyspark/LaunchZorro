@@ -46,7 +46,13 @@ app.on("window-all-closed", function() {
 
 function createMainWindow() {
   if(!mainWindow) {
-    mainWindow = new BrowserWindow({ width: 1024, height: 600 });
+    mainWindow = new BrowserWindow({
+      width: 1024,
+      height: 600,
+      webPreferences: {
+        backgroundThrottling: false
+      }
+    });
 
     mainWindow.loadURL("file://" + __dirname + "/index.html");
     mainWindow.maximize();
