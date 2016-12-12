@@ -384,7 +384,7 @@ ipcRenderer.on("core", function(event, args) {
         ipcRenderer.send("core", ["close"]);
         break;
       case "PROFILE":
-        if(args.length > 0 && args[0].toUpperCase() === "RELOAD") $Core.reloadProfile(false);
+        if(args.length > 0 && args[0].toUpperCase() === "RELOAD") $Core.reloadProfile(true);
         break;
     }
   }
