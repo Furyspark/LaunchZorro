@@ -19,7 +19,9 @@ var packagerOptions = {
     /src$/i,
     /replace$/,
     /profiles$/,
-    /conf\.json/
+    /conf\.json/,
+    /core-config\.json/,
+    /(.+)\.sublime-(.+)/
   ],
   afterCopy: [
     function(buildPath, electronVersion, platform, arch, callback) {
