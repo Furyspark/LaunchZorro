@@ -1,3 +1,16 @@
+var fs = require("fs");
+
+var systemData = null;
+var stats;
+try {
+  stats = fs.statSync(__dirname + "/system.json");
+} catch (e) {
+  if(e) console.log(e);
+} finally {
+  if(stats && stats.isFile()) systemData = JSON.parse(fs.readFileSync(__dirname + "/system.json"));
+}
+delete stats;
+
 var electron = require("electron");
 var app = electron.app;
 var BrowserWindow = electron.BrowserWindow;
@@ -11,11 +24,14 @@ var tray = null;
 
 app.on("ready", function() {
   createMainWindow();
-  tray = new Tray("profiler.png");
+  tray = new Tray(__dirname + "/profiler.png");
   var contextMenu = Menu.buildFromTemplate([
     { label: "Show", click: function() { mainWindow.show(); } },
     { label: "Editor", click: function() { createEditorWindow(); } },
-    { label: "Quit", click: function() { mainWindow.webContents.send("core", ["close"]); } }
+    { label: "Quit", click: function() {
+      if(mainWindow) mainWindow.webContents.send("core", ["close"]);
+      if(editorWindow) editorWindow.webContents.send("core", ["close"]);
+    } }
   ]);
   tray.setToolTip("LaunchZorro");
   tray.setContextMenu(contextMenu);
@@ -35,7 +51,7 @@ function createMainWindow() {
     mainWindow.loadURL("file://" + __dirname + "/index.html");
     mainWindow.maximize();
 
-    mainWindow.webContents.openDevTools({ mode: "detach" });
+    if(!systemData) mainWindow.webContents.openDevTools({ mode: "detach" });
 
     mainWindow.on("closed", function() {
       mainWindow = null;
@@ -51,19 +67,20 @@ function createEditorWindow() {
   if(!editorWindow) {
     editorWindow = new BrowserWindow({ width: 1024, height: 768 });
 
-    editorWindow.loadURL("file://" + __dirname + "/editor/index.html");
+    editorWindow.loadURL("file://" + "/editor/index.html");
     editorWindow.maximize();
+
+    if(!systemData) editorWindow.webContents.openDevTools({ mode: "detach" });
 
     editorWindow.on("closed", function() {
       editorWindow = null;
     });
-  }
-}
 
-function handleWindowEvent(args) {
-  // HIDE
-  if(args.length > 0 && args[0].toUpperCase() === "HIDE" && mainWindow) {
-    mainWindow.hide();
+    editorWindow.webContents.on("devtools-opened", function() {
+      editorWindow.focus();
+    });
+  } else {
+    editorWindow.show();
   }
 }
 
@@ -72,10 +89,13 @@ ipcMain.on("core", function(event, args) {
     var cmd = args.splice(0, 1)[0];
     switch(cmd.toUpperCase()) {
       case "WINDOW":
-        handleWindowEvent(args);
+        if(args.length > 0 && args[0].toUpperCase() === "HIDE" && mainWindow) {
+          mainWindow.hide();
+        }
         break;
       case "CLOSE":
-        mainWindow.close();
+        if(mainWindow) mainWindow.close();
+        if(editorWindow) editorWindow.close();
         app.quit();
         break;
       case "EDITOR":
@@ -91,6 +111,11 @@ ipcMain.on("editor", function(event, args) {
     switch(cmd.toUpperCase()) {
       case "SAVED":
         mainWindow.send("core", ["profile", "reload"]);
+        break;
+      case "WINDOW":
+        if(args.length > 0 && args[0].toUpperCase() === "HIDE" && editorWindow) {
+          editorWindow.hide();
+        }
         break;
     }
   }

@@ -11,11 +11,14 @@ var tray = null;
 
 app.on("ready", function() {
   createMainWindow();
-  tray = new Tray("resources/app/profiler.png");
+  tray = new Tray(__dirname + "/profiler.png");
   var contextMenu = Menu.buildFromTemplate([
     { label: "Show", click: function() { mainWindow.show(); } },
     { label: "Editor", click: function() { createEditorWindow(); } },
-    { label: "Quit", click: function() { mainWindow.webContents.send("core", ["close"]); } }
+    { label: "Quit", click: function() {
+      if(mainWindow) mainWindow.webContents.send("core", ["close"]);
+      if(editorWindow) editorWindow.webContents.send("core", ["close"]);
+    } }
   ]);
   tray.setToolTip("LaunchZorro");
   tray.setContextMenu(contextMenu);
@@ -54,9 +57,17 @@ function createEditorWindow() {
     editorWindow.loadURL("file://" + "/editor/index.html");
     editorWindow.maximize();
 
+    // editorWindow.webContents.openDevTools({ mode: "detach" });
+
     editorWindow.on("closed", function() {
       editorWindow = null;
     });
+
+    editorWindow.webContents.on("devtools-opened", function() {
+      editorWindow.focus();
+    });
+  } else {
+    editorWindow.show();
   }
 }
 
@@ -75,7 +86,8 @@ ipcMain.on("core", function(event, args) {
         handleWindowEvent(args);
         break;
       case "CLOSE":
-        mainWindow.close();
+        if(mainWindow) mainWindow.close();
+        if(editorWindow) editorWindow.close();
         app.quit();
         break;
       case "EDITOR":

@@ -33,6 +33,7 @@ Core.start = function() {
   this.coreMessageElem = document.getElementById("core-message");
   this.coreMessageTimeout = null;
   this.extraParamInputs = [];
+  this._closing = false;
 
   this.createNewProfile();
   this.loadButtons();
@@ -512,5 +513,29 @@ Core.extendedBind = function() {
     this.dialogOpen = true;
     this.waitForInput.awaitingExtended = true;
     ipcRenderer.send("open-window-extended", [this.waitForInput.keycode]);
+  }
+}
+
+
+//-------------------------------------------------------------------
+// Events
+//
+
+ipcRenderer.on("core", function(event, args) {
+  if(args.length > 0) {
+    var cmd = args.splice(0, 1)[0];
+    switch(cmd.toUpperCase()) {
+      case "CLOSE":
+        Core._closing = true;
+        ipcRenderer.send("editor", ["close"]);
+        break;
+    }
+  }
+});
+
+window.onbeforeunload = function(event) {
+  if(!Core._closing) {
+    ipcRenderer.send("editor", ["window", "hide"]);
+    event.returnValue = false;
   }
 }

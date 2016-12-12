@@ -18,7 +18,6 @@ var packagerOptions = {
     /sources\.json/i,
     /src$/i,
     /replace$/,
-    /main\.js$/,
     /profiles$/,
     /conf\.json/
   ],
@@ -31,6 +30,14 @@ var packagerOptions = {
       fs.renameSync(buildPath + "/profiler", electronPath + "profiler");
       fs.renameSync(buildPath + "/icons", electronPath + "icons");
       fs.renameSync(buildPath + "/editor", electronPath + "editor");
+      // Create system file
+      var obj = {
+        arch: arch,
+        platform: platform,
+        electronVersion: electronVersion
+      };
+      fs.writeFileSync(buildPath + "/system.json", JSON.stringify(obj));
+      // Call callback
       callback();
     }
   ],
@@ -78,14 +85,14 @@ var editorSources = [
 ];
 
 var fileCount = 2;
-concat(sources, "app.js", {}, function() {
+concat(sources, "app.js", { separator: "\n" }, function() {
   fileCount--;
   if(fileCount === 0) {
     Package();
   }
 });
 
-concat(editorSources, "editor/app.js", {}, function() {
+concat(editorSources, "editor/app.js", { separator: "\n" }, function() {
   fileCount--;
   if(fileCount === 0) {
     Package();
@@ -97,10 +104,10 @@ function Package() {
     if(err) console.log(err);
     for(var a = 0;a < appPaths.length;a++) {
       var appPath = appPaths[a];
-      for(var b = 0;b < replaceFiles.length;b++) {
-        var replaceFile = replaceFiles[b];
-        copyFile(replaceFile.from, appPath + replaceFile.to);
-      }
+      // for(var b = 0;b < replaceFiles.length;b++) {
+      //   var replaceFile = replaceFiles[b];
+      //   copyFile(replaceFile.from, appPath + replaceFile.to);
+      // }
     }
   });
 }
