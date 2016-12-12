@@ -1,3 +1,15 @@
+var programInfo = {
+  version: {
+    major: 0,
+    minor: 1,
+    build: 1,
+    toString: function() {
+      return this.major.toString() + "." + this.minor.toString() + "." + this.build.toString();
+    }
+  }
+};
+
+
 var fs = require("fs");
 
 var systemData = null;
@@ -26,6 +38,7 @@ app.on("ready", function() {
   createMainWindow();
   tray = new Tray(__dirname + "/profiler.png");
   var contextMenu = Menu.buildFromTemplate([
+    { label: "Zorro v" + programInfo.version.toString(), enabled: false },
     { label: "Show", click: function() { mainWindow.show(); } },
     { label: "Editor", click: function() { createEditorWindow(); } },
     { label: "Quit", click: function() {
