@@ -69,7 +69,8 @@
     <div class="group" id="group_buttons">
       <span id="button-info" style="position:absolute;width:100%;top:380px;text-align:center"></span>
       <!-- <button onclick="Core.extendedBind();" style="position:absolute;top:350px;left:820px">Custom</button> -->
-      <button onclick="Core.cancelBind();" style="position:absolute;top:380px;left:820px">Deselect</button>
+      <button style="position:relative;left:70em;top:1em" onclick="Core.extraAction('loadprofile');">Load Profile</button>
+      <button onclick="Core.cancelBind();" style="position:relative;top:32em;left:88em">Deselect</button>
     </div>
 
     <div class="group" id="group_deviceselection">
@@ -81,8 +82,7 @@
       </select>
     </div>
 
-    <div class="group" id="group_extraactions">
-      <button onclick="Core.extraAction('loadprofile');">Load Profile</button>
-    </div>
+    <!-- <div class="group" id="group_extraactions">
+    </div> -->
   </body>
 </html>
