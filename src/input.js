@@ -56,7 +56,7 @@ Input.indexToString = function(index, e0) {
     case 50: return "m"; break;
     case 51: return "vkbc"; break;
     case 52: return "vkbe"; break;
-    case 53: if(e0) return "vkbf"; return "numpaddiv"; break;
+    case 53: if(e0) return "numpaddiv"; return "vkbf"; break;
     case 54: return "rshift"; break;
     case 55: if(e0) return ""; return "numpadmult"; break;
     case 56: if(e0) return "ralt"; return "lalt"; break;
@@ -81,7 +81,7 @@ Input.indexToString = function(index, e0) {
     case 75: if(e0) return "left"; return "numpad4"; break;
     case 76: if(e0) return ""; return "numpad5"; break;
     case 77: if(e0) return "right"; return "numpad6"; break;
-    case 78: if(e0) return ""; return "numpadplus"; break;
+    case 78: if(e0) return ""; return "numpadadd"; break;
     case 79: if(e0) return "end"; return "numpad1"; break;
     case 80: if(e0) return "down"; return "numpad2"; break;
     case 81: if(e0) return "pgdn"; return "numpad3"; break;
