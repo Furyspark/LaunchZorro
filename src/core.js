@@ -56,15 +56,12 @@ $Core.isDirectory = function(path, callback) {
 $Core.generateConfig = function() {
   var result = {
     suspend_key: "f1",
-    ptt: {
-      origin: "capslock",
-      key: "scrolllock"
-    },
     usingWhitelist: true,
     defaultDevice: {
       lhc: "normal",
       mouse: "normal"
-    }
+    },
+    startMinimized: false
   };
 
   return result;
@@ -306,6 +303,7 @@ $Core.handleInterception = function(keyCode, keyDown, keyE0, hwid, deviceType, m
 
   // HWID checking
   // if(keyDown && !this.isMouseMove(keyCode, mouseWheel)) console.log(hwid);
+  // if(keyDown && !this.isMouseMove(keyCode, mouseWheel)) console.log(keyName);
 
   var sendDefault = true;
 

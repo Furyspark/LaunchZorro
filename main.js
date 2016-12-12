@@ -17,7 +17,7 @@ var stats;
 try {
   stats = fs.statSync(__dirname + "/system.json");
 } catch (e) {
-  if(e) console.log(e);
+  // if(e) console.log(e);
 } finally {
   if(stats && stats.isFile()) systemData = JSON.parse(fs.readFileSync(__dirname + "/system.json"));
 }
@@ -35,12 +35,54 @@ var editorWindow = null;
 var tray = null;
 var recentProfiles = [];
 
+
+//------------------------------------------------------------------------
+// ConfigManager
+//
+
+function ConfigManager() {}
+
+ConfigManager._config = null;
+
+ConfigManager.generateConfig = function() {
+  this._config = {
+    startMinimized: false
+  };
+}
+
+ConfigManager.save = function() {
+  fs.writeFileSync("core-config.json", JSON.stringify(this._config));
+}
+
+ConfigManager.load = function() {
+  var stats;
+  try {
+    stats = fs.statSync("core-config.json");
+  } catch(e) {
+    // if(e) console.log(e);
+  } finally {
+    if(stats && stats.isFile()) this._config = JSON.parse(fs.readFileSync("core-config.json"));
+    else ConfigManager.generateConfig();
+  }
+}
+
+
+ConfigManager.load();
+
+//------------------------------------------------------------------------
+// App
+//
+
 app.on("ready", function() {
   createMainWindow();
   tray = new Tray(__dirname + "/profiler.png");
   tray.setToolTip("LaunchZorro");
   tray.setContextMenu(generateTrayMenu());
   tray.on("double-click", function() { mainWindow.show(); });
+});
+
+app.on("quit", function() {
+  ConfigManager.save();
 });
 
 app.on("window-all-closed", function() {
@@ -58,7 +100,6 @@ function generateTrayMenu() {
         label: profile.lhc + "/" + profile.mouse + "/" + profile.category + "/" + profile.profile,
         click: function(menuItem, browserWindow, event) {
           var index = menuItem.menu.items.indexOf(menuItem);
-          console.log(profile);
           mainWindow.webContents.send("core", ["profile", "load", profile.lhc, profile.mouse, profile.category, profile.profile]);
         }
       };
@@ -73,6 +114,10 @@ function generateTrayMenu() {
     { label: "Show", click: function() { mainWindow.show(); } }, // Show Zorro
     { label: "Editor", click: function() { createEditorWindow(); } }, // Show Editor
     { type: "separator" },
+    { label: "Start Minimized", type: "checkbox", checked: ConfigManager._config.startMinimized, click: function(menuItem, browserWindow, event) {
+      ConfigManager._config.startMinimized = !ConfigManager._config.startMinimized;
+      menuItem.checked = ConfigManager._config.startMinimized;
+    } },
     { label: "Quit", click: function() { // Quit App
       if(mainWindow) mainWindow.webContents.send("core", ["close"]);
       if(editorWindow) editorWindow.webContents.send("core", ["close"]);
@@ -93,6 +138,7 @@ function createMainWindow() {
 
     mainWindow.loadURL("file://" + __dirname + "/index.html");
     mainWindow.maximize();
+    if(ConfigManager._config.startMinimized) mainWindow.hide();
 
     if(!systemData) mainWindow.webContents.openDevTools({ mode: "detach" });
 
