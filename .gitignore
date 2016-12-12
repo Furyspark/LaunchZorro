@@ -5,3 +5,4 @@ node_modules
 app.js
 conf.json
 *.sublime-*
+core-config.json
