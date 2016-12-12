@@ -98,13 +98,12 @@ Profile.prototype.handleInterception = function(keyCode, keyDown, keyE0, hwid, k
 }
 
 Profile.prototype.checkWhitelist = function(hwid) {
-  var result = [];
+  var result = ["any"];
   if(this._whitelistLoading) return [];
   for(var a in this._whitelist) {
     var obj = this._whitelist[a];
     if(obj.indexOf(hwid) !== -1) result.push(a);
   }
-  if(result.length === 0) result = ["any"];
   return result;
 }
 
