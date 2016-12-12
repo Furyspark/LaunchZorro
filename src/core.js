@@ -34,6 +34,8 @@ $Core.MOUSE_MOVE_ABS  = 1;
 $Core._superGlobalProfile = null;
 $Core._globalProfile = null;
 
+$Core._recentProfiles = [];
+
 
 $Core.fileExists = function(path, callback) {
   fs.access(path, fs.constants.R_OK, function(err) {
@@ -66,6 +68,31 @@ $Core.generateConfig = function() {
   };
 
   return result;
+}
+
+$Core.addRecentProfile = function(lhc, mouse, category, profile) {
+  var test = this._recentProfiles.filter(function(obj) {
+    if(obj.lhc !== lhc) return false;
+    if(obj.mouse !== mouse) return false;
+    if(obj.category !== category) return false;
+    if(obj.profile !== profile) return false;
+    return true;
+  });
+  if(test.length > 0) {
+    var testObj = test[0];
+    var index = this._recentProfiles.indexOf(testObj);
+    this._recentProfiles.splice(index, 1);
+    this._recentProfiles.unshift(testObj);
+  } else {
+    this._recentProfiles.unshift({
+      lhc: lhc,
+      mouse: mouse,
+      category: category,
+      profile: profile
+    });
+  }
+  if(this._recentProfiles.length > 10) this._recentProfiles = this._recentProfiles.slice(0, 10);
+  ipcRenderer.send("core", ["recentprofiles", this._recentProfiles]);
 }
 
 $Core.loadGlobalProfiles = function() {
@@ -385,6 +412,14 @@ ipcRenderer.on("core", function(event, args) {
         break;
       case "PROFILE":
         if(args.length > 0 && args[0].toUpperCase() === "RELOAD") $Core.reloadProfile(true);
+        else if(args.length > 4 && args[0].toUpperCase() === "LOAD") {
+          var lhc = args[1];
+          var mouse = args[2];
+          var category = args[3];
+          var profile = args[4];
+          console.log(args);
+          $Profiles.loadProfile(mouse + "/" + lhc + "/" + category + "/" + profile);
+        }
         break;
     }
   }

@@ -33,21 +33,13 @@ var Tray = electron.Tray;
 var mainWindow = null;
 var editorWindow = null;
 var tray = null;
+var recentProfiles = [];
 
 app.on("ready", function() {
   createMainWindow();
   tray = new Tray(__dirname + "/profiler.png");
-  var contextMenu = Menu.buildFromTemplate([
-    { label: "Zorro v" + programInfo.version.toString(), enabled: false },
-    { label: "Show", click: function() { mainWindow.show(); } },
-    { label: "Editor", click: function() { createEditorWindow(); } },
-    { label: "Quit", click: function() {
-      if(mainWindow) mainWindow.webContents.send("core", ["close"]);
-      if(editorWindow) editorWindow.webContents.send("core", ["close"]);
-    } }
-  ]);
   tray.setToolTip("LaunchZorro");
-  tray.setContextMenu(contextMenu);
+  tray.setContextMenu(generateTrayMenu());
   tray.on("double-click", function() { mainWindow.show(); });
 });
 
@@ -56,6 +48,38 @@ app.on("window-all-closed", function() {
     app.quit();
   }
 });
+
+function generateTrayMenu() {
+  var recentMenuTemplate = [];
+  for(var a = 0;a < recentProfiles.length;a++) {
+    var profile = recentProfiles[a];
+    (function(profile) {
+      var item = {
+        label: profile.lhc + "/" + profile.mouse + "/" + profile.category + "/" + profile.profile,
+        click: function(menuItem, browserWindow, event) {
+          var index = menuItem.menu.items.indexOf(menuItem);
+          console.log(profile);
+          mainWindow.webContents.send("core", ["profile", "load", profile.lhc, profile.mouse, profile.category, profile.profile]);
+        }
+      };
+      recentMenuTemplate.push(item);
+    })(profile);
+  }
+
+  var menu = Menu.buildFromTemplate([
+    { label: "Zorro v" + programInfo.version.toString(), enabled: false }, // Version
+    { type: "separator" },
+    { label: "Recent", submenu: recentMenuTemplate },
+    { label: "Show", click: function() { mainWindow.show(); } }, // Show Zorro
+    { label: "Editor", click: function() { createEditorWindow(); } }, // Show Editor
+    { type: "separator" },
+    { label: "Quit", click: function() { // Quit App
+      if(mainWindow) mainWindow.webContents.send("core", ["close"]);
+      if(editorWindow) editorWindow.webContents.send("core", ["close"]);
+    } }
+  ]);
+  return menu;
+}
 
 function createMainWindow() {
   if(!mainWindow) {
@@ -119,6 +143,10 @@ ipcMain.on("core", function(event, args) {
         break;
       case "EDITOR":
         if(args.length > 0 && args[0].toUpperCase() === "OPEN") createEditorWindow();
+        break;
+      case "RECENTPROFILES":
+        recentProfiles = args[0];
+        tray.setContextMenu(generateTrayMenu());
         break;
     }
   }

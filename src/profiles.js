@@ -147,10 +147,16 @@ $Profiles.loadProfile = function(url) {
       this.profile = new Profile(profilePath);
 
       // Set current data
-      this.current.lhc = $Core.LHCElement().value;
-      this.current.mouse = $Core.MouseElement().value;
-      this.current.category = $Categories.getSelected().value;
-      this.current.profile = profileName;
+      var lhc = $Core.LHCElement().value;
+      var mouse = $Core.MouseElement().value;
+      var category = $Categories.getSelected().value;
+      var profile = profileName;
+      this.current.lhc = lhc;
+      this.current.mouse = mouse;
+      this.current.category = category;
+      this.current.profile = profile;
+      // Add to recent profiles
+      $Core.addRecentProfile(lhc, mouse, category, profile);
     }
   }
   else {
@@ -168,6 +174,8 @@ $Profiles.loadProfile = function(url) {
     this.current.category = category;
     this.current.profile = profileName;
     this.refresh();
+    // Add to recent profiles
+    $Core.addRecentProfile(lhc, mouse, category, profileName);
   }
 }
 
