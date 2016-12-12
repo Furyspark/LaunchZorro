@@ -36,7 +36,7 @@ var packagerOptions = {
   name: "LaunchZorro",
   out: "bin",
   platform: "win32",
-  version: "1.4.1"
+  version: "1.4.2"
 };
 
 function copyFile(src, dest, callback) {
