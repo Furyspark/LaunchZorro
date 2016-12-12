@@ -6,6 +6,7 @@ var Menu = electron.Menu;
 var Tray = electron.Tray;
 
 var mainWindow = null;
+var editorWindow = null;
 var tray = null;
 
 app.on("ready", function() {
@@ -13,6 +14,7 @@ app.on("ready", function() {
   tray = new Tray("resources/app/profiler.png");
   var contextMenu = Menu.buildFromTemplate([
     { label: "Show", click: function() { mainWindow.show(); } },
+    { label: "Editor", click: function() { createEditorWindow(); } },
     { label: "Quit", click: function() { mainWindow.webContents.send("core", ["close"]); } }
   ]);
   tray.setToolTip("LaunchZorro");
@@ -45,6 +47,19 @@ function createMainWindow() {
   }
 }
 
+function createEditorWindow() {
+  if(!editorWindow) {
+    editorWindow = new BrowserWindow({ width: 1024, height: 768 });
+
+    editorWindow.loadURL("file://" + __dirname + "/editor/index.html");
+    editorWindow.maximize();
+
+    editorWindow.on("closed", function() {
+      editorWindow = null;
+    });
+  }
+}
+
 function handleWindowEvent(args) {
   // HIDE
   if(args.length > 0 && args[0].toUpperCase() === "HIDE" && mainWindow) {
@@ -62,6 +77,20 @@ ipcMain.on("core", function(event, args) {
       case "CLOSE":
         mainWindow.close();
         app.quit();
+        break;
+      case "EDITOR":
+        if(args.length > 0 && args[0].toUpperCase() === "OPEN") createEditorWindow();
+        break;
+    }
+  }
+});
+
+ipcMain.on("editor", function(event, args) {
+  if(args.length > 0) {
+    var cmd = args.splice(0, 1)[0];
+    switch(cmd.toUpperCase()) {
+      case "SAVED":
+        mainWindow.send("core", ["profile", "reload"]);
         break;
     }
   }
