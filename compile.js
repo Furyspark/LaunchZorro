@@ -41,7 +41,7 @@ var packagerOptions = {
       callback();
     }
   ],
-  name: "LaunchZorro",
+  name: "Zorro",
   out: "bin",
   platform: "win32",
   version: "1.4.12"
