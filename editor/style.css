@@ -45,7 +45,7 @@ button:hover {
 
 #group_keymaps {
   width: 32em;
-  height: 12em;
+  height: 16em;
 }
 
 #group_buttons {
@@ -77,12 +77,12 @@ button:hover {
 
 #keymap-select {
   width: 13em;
-  height: 9em;
+  height: 15em;
 }
 
 #bind-select {
   width: 22em;
-  height: 9em;
+  height: 15em;
 }
 
 
