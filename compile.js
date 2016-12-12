@@ -30,6 +30,7 @@ var packagerOptions = {
       fs.renameSync(buildPath + "/devices.json", electronPath + "devices.json");
       fs.renameSync(buildPath + "/profiler", electronPath + "profiler");
       fs.renameSync(buildPath + "/icons", electronPath + "icons");
+      fs.renameSync(buildPath + "/editor", electronPath + "editor");
       callback();
     }
   ],

@@ -51,7 +51,7 @@ function createEditorWindow() {
   if(!editorWindow) {
     editorWindow = new BrowserWindow({ width: 1024, height: 768 });
 
-    editorWindow.loadURL("file://" + __dirname + "/editor/index.html");
+    editorWindow.loadURL("file://" + "/editor/index.html");
     editorWindow.maximize();
 
     editorWindow.on("closed", function() {
