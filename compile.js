@@ -19,7 +19,7 @@ var packagerOptions = {
     /src$/i,
     /replace$/,
     /main\.js$/,
-    /^profiles$/i,
+    /profiles$/,
     /conf\.json/
   ],
   afterCopy: [
