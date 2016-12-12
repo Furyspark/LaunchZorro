@@ -30,12 +30,22 @@ Core.start = function() {
     }
   };
   this.buttonInfoElem = document.getElementById("button-info");
+  this.coreMessageElem = document.getElementById("core-message");
+  this.coreMessageTimeout = null;
   this.extraParamInputs = [];
 
   this.createNewProfile();
   this.loadButtons();
 
   window.addEventListener("keyup", this.keyUp.bind(this));
+}
+
+Core.setCoreMessage = function(msg, time) {
+  if(this.coreMessageTimeout) window.clearTimeout(this.coreMessageTimeout);
+  this.coreMessageElem.innerHTML = msg;
+  this.coreMessageTimeout = window.setTimeout(function() {
+    this.coreMessageElem.innerHTML = "";
+  }.bind(this), time);
 }
 
 Core.buttonNew = function() {
@@ -132,6 +142,7 @@ Core.saveProfile = function(file) {
   fs.writeFile(file, Saver.stringifyProfile(this.profile), function() {
     Core.dialogOpen = false;
     ipcRenderer.send("editor", ["saved"]);
+    Core.setCoreMessage("Saved!", 1000);
   });
 }
 
