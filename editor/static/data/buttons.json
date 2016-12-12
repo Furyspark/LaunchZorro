@@ -991,8 +991,8 @@
       "hardware_id": "any"
     },
     {
-      "label": "M4B",
-      "keycode": "mousebutton4",
+      "label": "M5B",
+      "keycode": "mousebutton5",
       "x": 780,
       "y": 110,
       "width": 30,
@@ -1000,8 +1000,8 @@
       "hardware_id": "any"
     },
     {
-      "label": "M5B",
-      "keycode": "mousebutton5",
+      "label": "M4B",
+      "keycode": "mousebutton4",
       "x": 780,
       "y": 140,
       "width": 30,
