@@ -35,6 +35,7 @@ $Profiles.add = function(name) {
   // Add label
   var txtElem = document.createElement("span");
   txtElem.innerHTML = name;
+  txtElem.style.width = "164px";
   elem.appendChild(txtElem);
   // Add icon
   var dirName = "generic";
