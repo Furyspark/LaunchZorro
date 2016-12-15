@@ -37,6 +37,7 @@ Core.start = function() {
 
   this.createNewProfile();
   this.loadButtons();
+  this.loadWhitelist();
 
   window.addEventListener("keyup", this.keyUp.bind(this));
 }
@@ -44,9 +45,16 @@ Core.start = function() {
 Core.setCoreMessage = function(msg, time) {
   if(this.coreMessageTimeout) window.clearTimeout(this.coreMessageTimeout);
   this.coreMessageElem.innerHTML = msg;
-  this.coreMessageTimeout = window.setTimeout(function() {
-    this.coreMessageElem.innerHTML = "";
-  }.bind(this), time);
+  if(time > 0) {
+    this.coreMessageTimeout = window.setTimeout(function() {
+      this.coreMessageElem.innerHTML = "";
+    }.bind(this), time);
+  }
+}
+
+Core.clearCoreMessage = function() {
+  if(this.coreMessageTimeout) window.clearTimeout(this.coreMessageTimeout);
+  this.coreMessage.innerHTML = "";
 }
 
 Core.buttonNew = function() {

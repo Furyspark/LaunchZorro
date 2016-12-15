@@ -33,6 +33,8 @@
         <button type="button" class="normal" onclick="$Core.reloadProfile();">Reload</button>
         <button type="button" class="normal" onclick="$Core.refreshProfiles();">Refresh</button>
         <button type="button" class="normal" onclick="$Core.openEditor();">Editor</button>
+        <br>
+        <span id="core-message"></span>
       </div>
       <!-- Profile Info -->
       <div class="group" id="group_profile_info">
@@ -41,6 +43,14 @@
         </ul>
       </div>
       <br>
+      <!-- Whitelist -->
+      <div class="group" id="group_whitelist">
+        <select id="group-whitelist" style="width:160px" onchange="$Core.onSelectWhitelistDevice();">
+        </select>
+        <select id="group-whitelist-hwids" style="width:160px">
+        </select>
+        <button type="button" class="normal" onclick="$Core.buttonWhitelist();" style="width:160px">Whitelist Device</button>
+      </div>
       <!-- Options -->
       <div class="group">
         <!-- Enable Defaults -->

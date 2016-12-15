@@ -35,6 +35,8 @@ $Core._superGlobalProfile = null;
 $Core._globalProfile = null;
 
 $Core._recentProfiles = [];
+$Core._coreMsgTimeout = null;
+$Core._waitForWhitelistKey = false;
 
 
 $Core.fileExists = function(path, callback) {
@@ -65,6 +67,22 @@ $Core.generateConfig = function() {
   };
 
   return result;
+}
+
+$Core.setCoreMessage = function(msg, time) {
+  if(this._coreMsgTimeout) window.clearTimeout(this._coreMsgTimeout);
+  var elem = document.getElementById("core-message");
+  elem.innerHTML = msg;
+  if(time > 0) {
+    this._coreMsgTimeout = window.setTimeout(function() {
+      elem.innerHTML = "";
+    }, time);
+  }
+}
+
+$Core.clearCoreMessage = function() {
+  if(this._coreMsgTimeout) window.clearTimeout(this._coreMsgTimeout);
+  document.getElementById("core-message").innerHTML = "";
 }
 
 $Core.addRecentProfile = function(lhc, mouse, category, profile) {
@@ -151,6 +169,7 @@ $Core.start = function() {
 
   $Core.handler = new interceptionJS();
   $Core.handler.start($Core.handleInterception.bind($Core));
+  $Core.loadWhitelist();
   // $Core.initQuickField();
 
   $Categories.refresh();
@@ -308,7 +327,15 @@ $Core.handleInterception = function(keyCode, keyDown, keyE0, hwid, deviceType, m
   var sendDefault = true;
 
   var prof = $Profiles.profile;
-  if(this._superGlobalProfile && this._superGlobalProfile.hasActiveBind(keyName)) {
+  if(this._waitForWhitelistKey && keyCode > 0) {
+    sendDefault = false;
+    this._waitForWhitelistKey = false;
+    this.addToWhitelist(null, hwid);
+    this.onSelectWhitelistDevice();
+    this.saveWhitelist();
+    this.clearCoreMessage();
+  }
+  else if(this._superGlobalProfile && this._superGlobalProfile.hasActiveBind(keyName)) {
     sendDefault = false;
     this._superGlobalProfile.handleInterception(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y, { ignoreWhitelist: true });
   }
@@ -393,6 +420,72 @@ $Core.destroyInterception = function() {
 
 $Core.openEditor = function() {
   ipcRenderer.send("core", ["editor", "open"]);
+}
+
+$Core.buttonWhitelist = function() {
+  this.setCoreMessage("Press a key or button on your desired device...");
+  this._waitForWhitelistKey = true;
+}
+
+$Core.loadWhitelist = function() {
+  this._whitelist = null;
+  fs.readFile("profiler/whitelist.json", function(err, data) {
+    if(err) console.log(err);
+    this._whitelist = JSON.parse(data);
+    for(var a in this._whitelist) {
+      this.addWhitelistDeviceToGroup(a);
+    }
+    $Core.onSelectWhitelistDevice();
+  }.bind(this));
+}
+
+$Core.saveWhitelist = function() {
+  fs.writeFile("profiler/whitelist.json", JSON.stringify(this._whitelist));
+}
+
+$Core.addToWhitelist = function(device, hwid) {
+  if(!device) device = this.getWhitelistDeviceElem().value;
+  if(!this._whitelist) return;
+  if(!this._whitelist[device]) this._whitelist[device] = [];
+  var index = this._whitelist[device].indexOf(hwid);
+  if(index === -1) this._whitelist[device].push(hwid);
+  this.saveWhitelist();
+}
+
+$Core.addWhitelistDeviceToGroup = function(name) {
+  var groupElem = document.getElementById("group-whitelist");
+  var elem = document.createElement("option");
+  elem.value = name;
+  elem.innerHTML = name;
+  groupElem.appendChild(elem);
+}
+
+$Core.getWhitelistDeviceElem = function() {
+  var group = document.getElementById("group-whitelist");
+  for(var a = 0;a < group.children.length;a++) {
+    var child = group.children[a];
+    if(child.selected) return child;
+  }
+}
+
+$Core.onSelectWhitelistDevice = function() {
+  var elem = this.getWhitelistDeviceElem();
+  if(elem) this.setWhitelistHwidList(elem.value);
+}
+
+$Core.setWhitelistHwidList = function(device) {
+  var group = document.getElementById("group-whitelist-hwids");
+  var hwidList = this._whitelist[device];
+  while(group.firstChild) {
+    group.removeChild(group.firstChild);
+  }
+  for(var a = 0;a < hwidList.length;a++) {
+    var hwid = hwidList[a];
+    var elem = document.createElement("option");
+    elem.value = hwid;
+    elem.innerHTML = hwid;
+    group.appendChild(elem);
+  }
 }
 
 
