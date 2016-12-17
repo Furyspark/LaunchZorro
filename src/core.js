@@ -307,14 +307,6 @@ $Core.detectRunning = function() {
   });
 }
 
-$Core.profileStack = function() {
-  var stack = [];
-  if(this._superGlobalProfile) stack.push(this._superGlobalProfile);
-  if(this._globalProfile) stack.push(this._globalProfile);
-  if($Profiles.profile) stack.push($Profile.profile);
-  return stack;
-}
-
 $Core.handleInterception = function(keyCode, keyDown, keyE0, hwid, deviceType, mouseWheel, mouseMove, x, y) {
   var keyName = "";
   if(deviceType === $Core.DEVICE_TYPE_KEYBOARD) keyName = Input.indexToString(keyCode, keyE0);
@@ -325,7 +317,6 @@ $Core.handleInterception = function(keyCode, keyDown, keyE0, hwid, deviceType, m
   // if(keyDown && !this.isMouseMove(keyCode, mouseWheel)) console.log(keyName);
 
   var sendDefault = true;
-
   var prof = $Profiles.profile;
   if(this._waitForWhitelistKey && keyCode > 0) {
     sendDefault = false;
@@ -335,25 +326,23 @@ $Core.handleInterception = function(keyCode, keyDown, keyE0, hwid, deviceType, m
     this.saveWhitelist();
     this.clearCoreMessage();
   }
-  else if(this._superGlobalProfile && this._superGlobalProfile.hasActiveBind(keyName)) {
+  else if(prof && keyName === this.conf.suspend_key) {
     sendDefault = false;
-    this._superGlobalProfile.handleInterception(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y, { ignoreWhitelist: true });
+    if(keyDown) {
+      prof.toggleSuspend();
+    }
   }
-  else if(this._globalProfile && this._globalProfile.hasActiveBind(keyName)) {
+  else if(prof && prof.shouldHandle(keyName, hwid, deviceType, {})) {
+    sendDefault = false;
+    prof.handleInterception(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y);
+  }
+  else if(this._globalProfile && this._globalProfile.shouldHandle(keyName, hwid, deviceType, {})) {
     sendDefault = false;
     this._globalProfile.handleInterception(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y);
   }
-  else if(prof) {
-    if(keyName === this.conf.suspend_key) {
-      if(keyDown) {
-        sendDefault = false;
-        prof.toggleSuspend();
-      }
-    }
-    else if(!prof.suspended()) {
-      sendDefault = false;
-      prof.handleInterception(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y);
-    }
+  else if(this._superGlobalProfile && this._superGlobalProfile.shouldHandle(keyName, hwid, deviceType, { ignoreWhitelist: true })) {
+    sendDefault = false;
+    this._superGlobalProfile.handleInterception(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y);
   }
   if(sendDefault) {
     this.handler.send_default();

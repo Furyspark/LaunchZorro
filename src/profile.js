@@ -61,40 +61,42 @@ Profile.prototype.options = function() {
   return null;
 }
 
-Profile.prototype.handleInterception = function(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y, config) {
-  var options = this.options();
-  if(!options) {
-    this.core().send_default();
-    return;
+Profile.prototype.handleInterception = function(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y) {
+  var deviceNames = this.checkWhitelist(hwid);
+  var bind = this.getBind(deviceNames, keyName);
+  // if(onWhitelist && bind) {
+  if(bind) {
+    // Key DOWN
+    if(keyDown) {
+      this.pressBind(bind);
+    }
+    // Key UP
+    else {
+      this.releaseBind(bind);
+    }
   }
-  var coreOptions = $Core.options();
-  var sendDefault = true;
-  var ignoreWhitelist = false;
-  if(config && config.ignoreWhitelist) ignoreWhitelist = true;
+}
 
-  if(!this.suspended()) {
-    sendDefault = false;
+Profile.prototype.shouldHandle = function(keyName, hwid, deviceType, config) {
+  if(this.suspended()) return false;
+  if(this.usingWhitelist() && !config.ignoreWhitelist) {
     var deviceNames = this.checkWhitelist(hwid);
-    var onWhitelist = this.usingWhitelist() ? this.isOnWhitelist(deviceNames) : true;
-    if(ignoreWhitelist) onWhitelist = true;
-    var bind = this.getBind(deviceNames, keyName);
-    if(onWhitelist && bind) {
-      // Key DOWN
-      if(keyDown) {
-        this.pressBind(bind);
-      }
-      // Key UP
-      else {
-        this.releaseBind(bind);
-      }
-    }
-    else if(!bind && deviceType === $Core.DEVICE_TYPE_MOUSE) sendDefault = true;
-    else if((options && (options.enableDefaults || coreOptions.enableDefaults) && !bind) || !onWhitelist) {
-      this.core().send_default();
-    }
+    if(!this.isOnWhitelist(deviceNames)) return false;
   }
+  if(!this.hasActiveBind(keyName)) {
+    if(this.enableDefaults()) return false;
+    if(deviceType === $Core.DEVICE_TYPE_MOUSE) return false;
+  }
+  return true;
+}
 
-  if(sendDefault) this.core().send_default();
+Profile.prototype.enableDefaults = function() {
+  if(this === $Core._globalProfile || this === $Core._superGlobalProfile) return true;
+  var options = this.options();
+  if(options.enableDefaults) return true;
+  var coreOptions = $Core.options();
+  if(coreOptions.enableDefaults) return true;
+  return false;
 }
 
 Profile.prototype.checkWhitelist = function(hwid) {
