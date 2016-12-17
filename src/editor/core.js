@@ -37,7 +37,6 @@ Core.start = function() {
 
   this.createNewProfile();
   this.loadButtons();
-  this.loadWhitelist();
 
   window.addEventListener("keyup", this.keyUp.bind(this));
 }
