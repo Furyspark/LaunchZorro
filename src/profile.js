@@ -69,25 +69,35 @@ Profile.prototype.handleInterception = function(keyCode, keyDown, keyE0, hwid, k
     // Key DOWN
     if(keyDown) {
       this.pressBind(bind);
+      return true;
     }
     // Key UP
     else {
       this.releaseBind(bind);
+      return true;
     }
   }
+  return false;
 }
 
 Profile.prototype.shouldHandle = function(keyName, hwid, deviceType, config) {
   if(this.suspended()) return false;
+  var deviceNames = this.checkWhitelist(hwid);
   if(this.usingWhitelist() && !config.ignoreWhitelist) {
-    var deviceNames = this.checkWhitelist(hwid);
     if(!this.isOnWhitelist(deviceNames)) return false;
   }
-  if(!this.hasActiveBind(keyName)) {
+  var bind = this.getBind(deviceNames, keyName);
+  if(!bind) {
     if(this.enableDefaults()) return false;
     if(deviceType === $Core.DEVICE_TYPE_MOUSE) return false;
   }
   return true;
+}
+
+Profile.prototype.isOverriding = function(keyName, hwid) {
+  var deviceNames = this.checkWhitelist(hwid);
+  var bind = this.getBind(deviceNames, keyName);
+  return !!bind;
 }
 
 Profile.prototype.enableDefaults = function() {
