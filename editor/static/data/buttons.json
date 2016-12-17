@@ -1056,6 +1056,15 @@
 			"hardware_id": "any"
 		},
 		{
+			"label": "ScrLck",
+			"keycode": "scrolllock",
+			"x": 280,
+			"y": 320,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
 			"label": "Z",
 			"keycode": "Z",
 			"x": 20,
