@@ -2,7 +2,7 @@ var programInfo = {
   version: {
     major: 0,
     minor: 1,
-    build: 4,
+    build: 5,
     toString: function() {
       return this.major.toString() + "." + this.minor.toString() + "." + this.build.toString();
     }
@@ -76,7 +76,7 @@ ConfigManager.load();
 app.on("ready", function() {
   createMainWindow();
   tray = new Tray(__dirname + "/profiler.png");
-  tray.setToolTip("LaunchZorro");
+  tray.setToolTip("Zorro");
   tray.setContextMenu(generateTrayMenu());
   tray.on("double-click", function() { mainWindow.show(); });
 });

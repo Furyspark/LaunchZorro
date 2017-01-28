@@ -1,5 +1,14 @@
 {
 	"any": [
+    {
+      "label": "Keymap Held",
+      "keycode": "keymapheld",
+      "x": 940,
+      "y": 20,
+      "width": 120,
+      "height": 24,
+      "hardware_id": "any"
+    },
 		{
 			"label": "`",
 			"keycode": "sc029",
@@ -1312,6 +1321,15 @@
 		{
 			"label": "Esc",
 			"keycode": "escape",
+			"x": 310,
+			"y": 320,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": "ScrLck",
+			"keycode": "scrolllock",
 			"x": 280,
 			"y": 290,
 			"width": 20,
@@ -1811,15 +1829,51 @@
 			"hardware_id": "any"
 		},
 		{
-			"label": "M",
-			"keycode": "M",
+			"label": ";",
+			"keycode": "vkba",
+			"x": 460,
+			"y": 320,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": "U",
+			"keycode": "U",
 			"x": 400,
 			"y": 350,
 			"width": 20,
 			"height": 20,
 			"hardware_id": "any"
+		},
+		{
+			"label": "J",
+			"keycode": "J",
+			"x": 430,
+			"y": 350,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": "M",
+			"keycode": "M",
+			"x": 460,
+			"y": 350,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": "ScrLck",
+			"keycode": "scrolllock",
+			"x": 490,
+			"y": 350,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
 		}
-  ],
+	],
 	"scimitar": [
 		{
 			"label": "8",

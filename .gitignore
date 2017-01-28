@@ -6,3 +6,4 @@ app.js
 conf.json
 *.sublime-*
 core-config.json
+recent.json

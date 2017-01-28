@@ -106,7 +106,12 @@ $Core.addRecentProfile = function(lhc, mouse, category, profile) {
       profile: profile
     });
   }
+  this.saveRecentProfiles();
   if(this._recentProfiles.length > 10) this._recentProfiles = this._recentProfiles.slice(0, 10);
+  $Core.sendRecentProfilesToMain();
+}
+
+$Core.sendRecentProfilesToMain = function() {
   ipcRenderer.send("core", ["recentprofiles", this._recentProfiles]);
 }
 
@@ -170,12 +175,25 @@ $Core.start = function() {
   $Core.handler = new interceptionJS();
   $Core.handler.start($Core.handleInterception.bind($Core));
   $Core.loadWhitelist();
+  $Core.loadRecentProfiles();
   // $Core.initQuickField();
 
   $Categories.refresh();
 
   // $Core.setPriority();
 };
+
+$Core.loadRecentProfiles = function() {
+  fs.readFile("recent.json", function(err, data) {
+    if(err) console.log(err);
+    this._recentProfiles = JSON.parse(data);
+    $Core.sendRecentProfilesToMain();
+  }.bind(this));
+}
+
+$Core.saveRecentProfiles = function() {
+  fs.writeFile("recent.json", JSON.stringify(this._recentProfiles));
+}
 
 $Core.onConfLoaded = function() {
   if(processType !== "node") {

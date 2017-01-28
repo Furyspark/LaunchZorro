@@ -16,6 +16,7 @@ var packagerOptions = {
     /profiler\.ico/i,
     /readme\.md/i,
     /sources\.json/i,
+    /recent\.json/i,
     /src$/i,
     /replace$/,
     /profiles$/,

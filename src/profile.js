@@ -211,7 +211,27 @@ Profile.prototype.keymapIndex = function() {
 }
 
 Profile.prototype.switchKeymap = function(value) {
-  if(this._keymapIndex !== value) this._keymapIndex = value;
+  if(this._keymapIndex !== value) {
+    this.releaseKeymapHeld();
+    this._keymapIndex = value;
+    this.pressKeymapHeld();
+  }
+}
+
+Profile.prototype.pressKeymapHeld = function() {
+  var keymap = this.keymaps[this.keymapIndex()];
+  var bind = keymap.getBind("any", "keymapheld");
+  if(bind) {
+    bind.press();
+  }
+}
+
+Profile.prototype.releaseKeymapHeld = function() {
+  var keymap = this.keymaps[this.keymapIndex()];
+  var bind = keymap.getBind("any", "keymapheld");
+  if(bind) {
+    bind.release();
+  }
 }
 
 Profile.prototype.suspended = function() {
