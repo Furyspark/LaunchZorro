@@ -87,20 +87,25 @@ var editorSources = [
   "src/editor/footer.js"
 ];
 
-var fileCount = 2;
-concat(sources, "app.js", { separator: "\n" }, function() {
-  fileCount--;
-  if(fileCount === 0) {
-    Package();
-  }
-});
+var editorExtendedSources = [
+  "src/editor/extended/header.js",
+  "src/editor/extended/core.js",
+  "src/editor/extended/footer.js"
+];
 
-concat(editorSources, "editor/app.js", { separator: "\n" }, function() {
+var fileCount = 3;
+concat(sources, "app.js", { separator: "\n" }, TestPackage);
+
+concat(editorSources, "editor/app.js", { separator: "\n" }, TestPackage);
+
+concat(editorExtendedSources, "editor/extended.js", { separator: "\n" }, TestPackage);
+
+function TestPackage() {
   fileCount--;
   if(fileCount === 0) {
     Package();
   }
-});
+}
 
 function Package() {
   packager(packagerOptions, function(err, appPaths) {
