@@ -6,6 +6,7 @@ var interceptionJS = require("./interception/interception");
 var processType = "electron";
 var electron = require("electron");
 var ipcRenderer = electron.ipcRenderer;
+var SocketIOServer = require("socket.io");
 
 var $Core = {};
 
@@ -38,6 +39,59 @@ $Core._recentProfiles = [];
 $Core._coreMsgTimeout = null;
 $Core._waitForWhitelistKey = false;
 
+
+
+$Core.start = function() {
+  this._closing = false;
+  // Add Left-Handed Controllers to the list of devices
+  if(processType !== "node") {
+    var groups = ["lhc", "mice"];
+    for(var a = 0;a < groups.length;a++) {
+      var groupName = groups[a];
+      var group = $Core.devices.list[groupName];
+      for(var b = 0;b < group.length;b++) {
+        var device = group[b];
+
+        // Create element
+        var elem = $Core.addRadioButton("group_" + groupName, device.dirName, groupName, device.name);
+        // Add click event
+        if(groupName === "lhc") {
+          elem.onchange = function() {
+            $Core.onLHCSelect();
+          };
+        } else if(groupName === "mice") {
+          elem.onchange = function() {
+            $Core.onMouseSelect();
+          };
+        }
+
+        // Set default check
+        elem.firstChild.checked = false;
+        if(b === 0) {
+          elem.firstChild.checked = true;
+        }
+
+        // Append to list
+        var obj = {
+          name: device.name,
+          dirName: device.dirName,
+          element: elem
+        };
+        $Core.devices[groupName][device.dirName] = obj;
+      }
+    }
+  }
+
+  $Core.handler = new interceptionJS();
+  $Core.handler.start($Core.handleInterception.bind($Core));
+  $Core.loadWhitelist();
+  $Core.loadRecentProfiles();
+  // $Core.initQuickField();
+
+  $Categories.refresh();
+
+  // $Core.setPriority();
+};
 
 $Core.fileExists = function(path, callback) {
   fs.access(path, fs.constants.R_OK, function(err) {
@@ -131,58 +185,6 @@ $Core.loadGlobalProfiles = function() {
   }.bind(this));
 }
 
-$Core.start = function() {
-  this._closing = false;
-  // Add Left-Handed Controllers to the list of devices
-  if(processType !== "node") {
-    var groups = ["lhc", "mice"];
-    for(var a = 0;a < groups.length;a++) {
-      var groupName = groups[a];
-      var group = $Core.devices.list[groupName];
-      for(var b = 0;b < group.length;b++) {
-        var device = group[b];
-
-        // Create element
-        var elem = $Core.addRadioButton("group_" + groupName, device.dirName, groupName, device.name);
-        // Add click event
-        if(groupName === "lhc") {
-          elem.onchange = function() {
-            $Core.onLHCSelect();
-          };
-        } else if(groupName === "mice") {
-          elem.onchange = function() {
-            $Core.onMouseSelect();
-          };
-        }
-
-        // Set default check
-        elem.firstChild.checked = false;
-        if(b === 0) {
-          elem.firstChild.checked = true;
-        }
-
-        // Append to list
-        var obj = {
-          name: device.name,
-          dirName: device.dirName,
-          element: elem
-        };
-        $Core.devices[groupName][device.dirName] = obj;
-      }
-    }
-  }
-
-  $Core.handler = new interceptionJS();
-  $Core.handler.start($Core.handleInterception.bind($Core));
-  $Core.loadWhitelist();
-  $Core.loadRecentProfiles();
-  // $Core.initQuickField();
-
-  $Categories.refresh();
-
-  // $Core.setPriority();
-};
-
 $Core.loadRecentProfiles = function() {
   fs.readFile("recent.json", function(err, data) {
     if(err) console.log(err);
@@ -210,6 +212,11 @@ $Core.onConfLoaded = function() {
     if(conf.usingWhitelist === true) {
       var elem = document.getElementById("profile-whitelist");
       elem.checked = true;
+    }
+    if(conf.linkOverwolf) {
+      var elem = document.getElementById("checkbox-overwolf-server");
+      elem.checked = true;
+      Overwolf.startServer();
     }
 
     if(doRefresh) {
@@ -297,6 +304,7 @@ $Core.unloadProfile = function() {
     $Profiles.setProfileInfo("N/A");
   }
   $Audio.play("unload");
+  Overwolf.sendMessage("No profile loaded");
 };
 
 $Core.reloadProfile = function(noSound) {
@@ -519,7 +527,6 @@ ipcRenderer.on("core", function(event, args) {
           var mouse = args[2];
           var category = args[3];
           var profile = args[4];
-          console.log(args);
           $Profiles.loadProfile(mouse + "/" + lhc + "/" + category + "/" + profile);
         }
         break;

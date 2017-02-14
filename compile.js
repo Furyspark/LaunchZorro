@@ -22,7 +22,8 @@ var packagerOptions = {
     /profiles$/,
     /conf\.json/,
     /core-config\.json/,
-    /(.+)\.sublime-(.+)/
+    /(.+)\.sublime-(.+)/,
+    /workplace$/,
   ],
   afterCopy: [
     function(buildPath, electronVersion, platform, arch, callback) {
@@ -32,7 +33,8 @@ var packagerOptions = {
       fs.renameSync(buildPath + "/devices.json", electronPath + "devices.json");
       fs.renameSync(buildPath + "/profiler", electronPath + "profiler");
       fs.renameSync(buildPath + "/icons", electronPath + "icons");
-      fs.renameSync(buildPath + "/editor", electronPath + "editor");
+      // fs.renameSync(buildPath + "/editor", electronPath + "editor");
+      // fs.renameSync(buildPath + "/lib", electronPath + "lib");
       // Create system file
       var obj = {
         arch: arch,
@@ -72,6 +74,7 @@ var sources = [
   "src/profiles.js",
   "src/audio.js",
   "src/profile.js",
+  "src/overwolf.js",
   "src/footer.js"
 ];
 

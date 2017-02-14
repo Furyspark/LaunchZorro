@@ -132,7 +132,8 @@ Profile.prototype.selectBind = function(bind) {
 
   var elem = document.getElementById("bind-rapidfire");
   elem.disabled = false;
-  elem.value = bind.rapidfire.toString();
+  if(bind.rapidfire > 0) elem.value = bind.rapidfire.toString();
+  else elem.value = "";
 
   var elem = document.getElementById("bind-shift");
   elem.disabled = false;

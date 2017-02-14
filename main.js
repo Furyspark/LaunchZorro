@@ -2,7 +2,7 @@ var programInfo = {
   version: {
     major: 0,
     minor: 1,
-    build: 5,
+    build: 6,
     toString: function() {
       return this.major.toString() + "." + this.minor.toString() + "." + this.build.toString();
     }
@@ -141,6 +141,7 @@ function createMainWindow() {
     if(ConfigManager._config.startMinimized) mainWindow.hide();
 
     if(!systemData) mainWindow.webContents.openDevTools({ mode: "detach" });
+    // mainWindow.webContents.openDevTools({ mode: "detach" });
 
     mainWindow.on("closed", function() {
       mainWindow = null;
@@ -156,10 +157,11 @@ function createEditorWindow() {
   if(!editorWindow) {
     editorWindow = new BrowserWindow({ width: 1024, height: 768 });
 
-    editorWindow.loadURL("file://" + "/editor/index.html");
+    editorWindow.loadURL("file://" + __dirname + "/editor/index.html");
     editorWindow.maximize();
 
     if(!systemData) editorWindow.webContents.openDevTools({ mode: "detach" });
+    // editorWindow.webContents.openDevTools({ mode: "detach" });
 
     editorWindow.on("closed", function() {
       editorWindow = null;
@@ -209,6 +211,9 @@ ipcMain.on("editor", function(event, args) {
         if(args.length > 0 && args[0].toUpperCase() === "HIDE" && editorWindow) {
           editorWindow.hide();
         }
+        break;
+      case "EXTENDED":
+
         break;
     }
   }

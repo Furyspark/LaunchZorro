@@ -1,6 +1,4 @@
-function Core() {
-  console.log("This is a static class.");
-}
+function Core() {}
 
 Core.start = function() {
   this.profile = null;
@@ -161,7 +159,7 @@ Core.cancelDialog = function() {
 
 Core.refresh = function() {
   // Remove extra param inputs
-  this.clearExtraParamInputs();
+  // this.clearExtraParamInputs();
 
   // Add/remove keymaps
   var elem = this.profile.keymapListElem;
@@ -215,7 +213,9 @@ Core.refresh = function() {
       elem.appendChild(newElem);
     }
   }
+}
 
+Core.refreshBind = function() {
   var binds = this.profile.getSelectedBinds();
   var bindLabelEditElem = document.getElementById("bind-label-edit");
   if(binds.length === 1) {
@@ -250,6 +250,7 @@ Core.selectKeymap = function() {
 
 Core.selectBind = function() {
   this.refresh();
+  this.refreshBind();
 }
 
 Core.cancelBind = function() {
@@ -274,7 +275,8 @@ Core.extraAction = function(type) {
 }
 
 Core.loadButtons = function() {
-  fs.readFile("editor/static/data/buttons.json", function(err, data) {
+  // document.getElementById("core-message").innerHTML = path.join(__dirname, "editor");
+  fs.readFile(__dirname + "/static/data/buttons.json", function(err, data) {
     if(err) throw err;
     var btnConf = JSON.parse(data.toString());
     for(var a in btnConf) {
@@ -286,7 +288,7 @@ Core.loadButtons = function() {
 }
 
 Core.loadDevices = function() {
-  fs.readFile("editor/static/data/devices.json", function(err, data) {
+  fs.readFile(__dirname + "/static/data/devices.json", function(err, data) {
     if(err) throw err;
     var devConf = JSON.parse(data.toString());
     for(var a = 0;a < devConf.mice.length;a++) {
@@ -423,7 +425,21 @@ Core.keyUp = function(e) {
         this.refresh();
       }
     }
+    else {
+      if(e.ctrlKey) {
+        if(e.key === "ArrowUp") Core.scrollBind(-1);
+        else if(e.key === "ArrowDown") Core.scrollBind(1);
+      }
+    }
   }
+}
+
+Core.scrollBind = function(amount) {
+  var binds = this.profile.getSelectedBinds();
+  if(binds.length !== 1) return;
+  var bind = binds[0];
+  var parent = bind.parent;
+  console.log(parent);
 }
 
 Core.getKeyFromCode = function(key) {

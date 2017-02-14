@@ -240,10 +240,13 @@ Profile.prototype.suspended = function() {
 
 Profile.prototype.suspend = function(sw) {
   this._suspended = sw;
-  if(sw) {
-    $Audio.play("deactivate_profile");
-  }
-  else {
-    $Audio.play("activate_profile");
+  Overwolf.sendMessage(null, !sw);
+  if(!Overwolf.isActive()) {
+    if(sw) {
+      $Audio.play("deactivate_profile");
+    }
+    else {
+      $Audio.play("activate_profile");
+    }
   }
 }

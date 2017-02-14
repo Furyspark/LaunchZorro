@@ -38,8 +38,6 @@ Keymap.prototype.addBind = function() {
   var newBind = new Bind(this);
   this.binds.push(newBind);
 
-  Core.refresh();
-
   return newBind;
 }
 
@@ -87,6 +85,5 @@ Keymap.prototype.deselect = function() {
 Keymap.prototype.getBind = function(origin, hwid) {
   for(var a = 0;a < this.binds.length;a++) {
     var bind = this.binds[a];
-    console.log(bind);
   }
 }
