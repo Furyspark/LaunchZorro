@@ -433,7 +433,7 @@ $Core.onConfLoaded = function() {
 };
 
 $Core.setPriority = function() {
-  if(processType !== "node") var app = spawn("wmic", ["process", "where", "name=\"LaunchZorro.exe\"", "CALL", "setpriority", "\"high priority\""], { shell: true });
+  var app = spawn("wmic", ["process", "where", "name=\"" + process.argv[1].split("/").slice(-1) + "\"", "CALL", "setpriority", "\"high priority\""], { shell: true });
 }
 
 $Core.selectLHC = function(value) {
@@ -809,6 +809,7 @@ Bind.prototype.initMembers = function() {
   this.toggleActive = false;
   this.held = false;
   this.hwid = "any";
+  this.elem = null;
 }
 
 Bind.prototype.keymap = function() {

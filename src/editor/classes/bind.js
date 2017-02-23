@@ -35,8 +35,15 @@ Bind.prototype.remove = function() {
 
 Bind.prototype.name = function() {
   if(this.keymap) return "[" + this.hwid + "] " + this.origin + " -> " + this.keymap.name + (this.label !== "" ? " (" + this.label + ")" : "");
-  // if(this.actions.press.length > 0 || this.actions.release.length > 0) return this.origin + " -> " + "Custom" + (this.label !== "" ? " (" + this.label + ")" : "");
   return "[" + this.hwid + "] " + this.origin + " -> " + this.key + (this.label !== "" ? " (" + this.label + ")" : "");
+}
+
+Bind.prototype.nameLimited = function() {
+  var name = this.name();
+  if(name.length > Core.maxBindNameLength()) {
+    name = name.slice(0, Core.maxBindNameLength() - 3) + "...";
+  }
+  return name;
 }
 
 Bind.prototype.refresh = function() {
@@ -44,6 +51,7 @@ Bind.prototype.refresh = function() {
   for(var a = 0;a < this.parent.binds.length;a++) {
     var bind = this.parent.binds[a];
     if(bind !== this && bind.origin === this.origin && bind.hwid === this.hwid) {
+      document.getElementById("bind-select").removeChild(bind.elem);
       bind.remove();
       a--;
     }

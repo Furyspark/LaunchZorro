@@ -90,7 +90,7 @@ Core.generateTrayMenu = function() {
     { type: "separator" },
     { label: "Recent", submenu: recentMenuTemplate },
     { label: "Show", click: function() { Core.mainWindow.show(); } }, // Show Zorro
-    { label: "Editor", click: function() { createEditorWindow(); } }, // Show Editor
+    { label: "Editor", click: function() { Core.createEditorWindow(); } }, // Show Editor
     { type: "separator" },
     { label: "Start Minimized", type: "checkbox", checked: ConfigManager._config.startMinimized, click: function(menuItem, browserWindow, event) {
       ConfigManager._config.startMinimized = !ConfigManager._config.startMinimized;

@@ -34,7 +34,7 @@ var BrowserWindow = electron.BrowserWindow;
 var ipcMain = electron.ipcMain;
 var Menu = electron.Menu;
 var Tray = electron.Tray;
-var interceptionJS = require("./interception/interception");
+// var interceptionJS = require("./interception/interception");
 
 var recentProfiles = [];
 

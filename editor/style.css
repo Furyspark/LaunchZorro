@@ -38,29 +38,65 @@ button:hover {
   border-radius: 0.8em;
 }
 
+.bind {
+  display: list-item;
+  width: 100%;
+  height: 32px;
+  background: rgb(0, 24, 96);
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0);
+}
+.bind:hover {
+  border: 1px solid white;
+}
+.bind-name {
+  display: inline-block;
+  margin: 0;
+  font-family: monospace;
+  font-size: 12px;
+  line-height: 32px;
+  vertical-align: middle;
+}
+
+#bind-select .ui-selecting {
+  background: #FECA40;
+}
+#bind-select .ui-selected {
+  background: #F39814;
+  color: white;
+}
+#bind-select .handle {
+  cursor: move;
+  display: inline-block;
+  background: #BBBBBB;
+  width: 24px;
+  height: 24px;
+  vertical-align: middle;
+}
+
 #group_main {
-  width: 36em;
-  height: 6em;
+  width: 600px;
+  height: 128px;
 }
 
 #group_keymaps {
-  width: 32em;
-  height: 16em;
+  width: 580px;
+  height: 300px;
 }
 
 #group_buttons {
-  width: 90em;
-  height: 30em;
+  width: 1600px;
+  height: 500px;
 }
 
 #group_action {
-  width: 36em;
-  height: 16em;
+  width: 400px;
+  height: 280px;
 }
 
 #group_deviceselection {
-  width: 14em;
-  height: 10em;
+  width: 220px;
+  height: 160px;
 }
 
 #group_extraactions {
@@ -76,13 +112,22 @@ button:hover {
 }
 
 #keymap-select {
-  width: 13em;
-  height: 15em;
+  width: 180px;
+  height: 240px;
 }
 
+#bind-select-container {
+  display: inline-block;
+  width: 352px;
+  height: 240px;
+  background: white;
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
 #bind-select {
-  width: 22em;
-  height: 15em;
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
 }
 
 

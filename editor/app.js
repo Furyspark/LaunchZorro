@@ -51,7 +51,13 @@ Core.start = function() {
   this.createNewProfile();
   this.loadButtons();
 
+  this.initJQueryUI();
+
   window.addEventListener("keyup", this.keyUp.bind(this));
+}
+
+Core.maxBindNameLength = function() {
+  return 42;
 }
 
 Core.setCoreMessage = function(msg, time) {
@@ -69,6 +75,17 @@ Core.clearCoreMessage = function() {
   this.coreMessage.innerHTML = "";
 }
 
+Core.initJQueryUI = function() {
+  $("#bind-select").sortable({
+    update: Core.updateBindSort.bind(Core),
+    handle: ".handle"
+  }).selectable({
+    filter: "div",
+    cancel: ".handle",
+    stop: Core.updateBindSelect.bind(Core)
+  });
+}
+
 Core.buttonNew = function() {
   if(!this.dialogOpen) {
     this.createNewProfile();
@@ -80,6 +97,7 @@ Core.createNewProfile = function() {
   this.profile.addKeymap("Default");
   this.profileLocation = "";
   document.getElementById("profile-name").innerHTML = "New Profile";
+  this.profile.deselectBind();
 }
 
 Core.buttonLoad = function() {
@@ -151,6 +169,9 @@ Core.loadProfile = function(file) {
     if(err) throw err;
     Core.profile = Saver.parseProfile(JSON.parse(data.toString()));
     Core.refresh();
+    Core.removeBindElements();
+    Core.createBindElements();
+    Core.profile.deselectBind();
   });
 }
 
@@ -173,9 +194,6 @@ Core.cancelDialog = function() {
 }
 
 Core.refresh = function() {
-  // Remove extra param inputs
-  // this.clearExtraParamInputs();
-
   // Add/remove keymaps
   var elem = this.profile.keymapListElem;
   var selects = [];
@@ -195,7 +213,40 @@ Core.refresh = function() {
   }
   elem.scrollTop = tempScroll;
 
-  // Add/remove binds
+  // Set keymap label editor availability
+  var selectedKeymaps = this.profile.getSelectedKeymaps();
+  var keymapLabelEditElem = document.getElementById("keymap-label-edit");
+  if(selectedKeymaps.length === 1) {
+    var keymap = selectedKeymaps[0];
+    keymapLabelEditElem.disabled = false;
+    keymapLabelEditElem.value = keymap.name;
+  }
+  else {
+    keymapLabelEditElem.disabled = true;
+    keymapLabelEditElem.value = "";
+  }
+}
+
+Core.removeBindElements = function() {
+  var rootElem = this.bindListElement();
+  while(rootElem.firstChild) {
+    rootElem.removeChild(rootElem.firstChild);
+  }
+  this.profile.deselectBind();
+}
+
+Core.createBindElements = function() {
+  var selectedKeymaps = this.profile.getSelectedKeymaps();
+  if(selectedKeymaps.length !== 1) return;
+  var keymap = selectedKeymaps[0];
+  for(var a = 0;a < keymap.binds.length;a++) {
+    var bind = keymap.binds[a];
+
+    this.createBindElement(bind);
+  }
+}
+
+Core.recreateBindList = function() {
   var elem = this.profile.bindListElem;
   var selects = [];
   var tempScroll = elem.scrollTop;
@@ -221,23 +272,67 @@ Core.refresh = function() {
     for(var a = 0;a < keymap.binds.length;a++) {
       var bind = keymap.binds[a];
 
-      var newElem = document.createElement("option");
-      newElem.value = bind.id.toString();
-      newElem.innerHTML = bind.name();
+      var newElem = this.createBindElement(bind);
       if(selects.indexOf(newElem.value) !== -1) newElem.selected = true;
       elem.appendChild(newElem);
     }
   }
 }
 
-Core.refreshBind = function() {
+Core.createBindElement = function(bind) {
+  // Root
+  var elem = document.createElement("div");
+  elem.className = "bind";
+  elem.value = bind.id.toString();
+  bind.elem = elem;
+  // Handle
+  var handleElem = document.createElement("div");
+  elem.appendChild(handleElem);
+  handleElem.className = "handle";
+  // Name
+  var nameElem = document.createElement("span");
+  elem.appendChild(nameElem);
+  nameElem.className = "bind-name";
+  nameElem.innerHTML = bind.nameLimited();
+  // Return result
+  this.bindListElement().appendChild(elem);
+  return elem;
+}
+
+Core.bindListElement = function() {
+  return document.getElementById("bind-select");
+}
+
+Core.updateBindSort = function(ev, ui) {
+  var keymaps = this.profile.getSelectedKeymaps();
+  if(keymaps.length !== 1) return;
+  var km = keymaps[0];
+  km.binds.sort(function(a, b) {
+    var aPos = a.elem.getBoundingClientRect();
+    var bPos = b.elem.getBoundingClientRect();
+    if(aPos.top > bPos.top) return 1;
+    if(aPos.top < bPos.top) return -1;
+    return 0;
+  });
+}
+
+Core.updateBindSelect = function(ev, ui) {
+  this.selectBind();
+}
+
+Core.refreshBinds = function() {
   var binds = this.profile.getSelectedBinds();
   var bindLabelEditElem = document.getElementById("bind-label-edit");
-  if(binds.length === 1) {
-    this.profile.selectBind(binds[0]);
-  }
-  else {
-    this.profile.deselectBind();
+  for(var a = 0;a < binds.length;a++) {
+    var bind = binds[a];
+    for(var b = 0;b < bind.elem.children.length;b++) {
+      var elem = bind.elem.children[b];
+      var classNames = elem.className.split(" ");
+      if(classNames.indexOf("bind-name") !== -1) {
+        // Name element found
+        elem.innerHTML = bind.nameLimited();
+      }
+    }
   }
 }
 
@@ -251,6 +346,7 @@ Core.selectKeymap = function() {
       bind.hwid = this.waitForInput.hwid;
       bind.keymap = keymap;
       bind.refresh();
+      this.createBindElement(bind);
 
       for(var a = 0;a < keymaps.length;a++) {
         keymaps[a].deselect();
@@ -260,12 +356,20 @@ Core.selectKeymap = function() {
       this.waitForInput.setActive(false);
     }
   }
+  else {
+    this.removeBindElements();
+    this.createBindElements();
+  }
   this.refresh();
 }
 
 Core.selectBind = function() {
-  this.refresh();
-  this.refreshBind();
+  var binds = this.profile.getSelectedBinds();
+  if(binds.length !== 1) {
+    this.profile.deselectBind();
+  } else {
+    this.profile.selectBind(binds[0]);
+  }
 }
 
 Core.cancelBind = function() {
@@ -283,6 +387,7 @@ Core.extraAction = function(type) {
       bind.hwid = this.waitForInput.hwid;
 
       bind.refresh();
+      this.createBindElement(bind);
       this.waitForInput.setActive(false);
       this.refresh();
     }
@@ -360,7 +465,7 @@ Core.inputBindRefresh = function() {
     var elem = document.getElementById("bind-jra");
     if(!elem.disabled) bind.jra = elem.checked;
 
-    this.refresh();
+    this.refreshBinds();
   }
 }
 
@@ -438,6 +543,7 @@ Core.keyUp = function(e) {
         bind.refresh();
         this.waitForInput.setActive(false);
         this.refresh();
+        this.createBindElement(bind);
       }
     }
     else {
@@ -454,7 +560,6 @@ Core.scrollBind = function(amount) {
   if(binds.length !== 1) return;
   var bind = binds[0];
   var parent = bind.parent;
-  console.log(parent);
 }
 
 Core.getKeyFromCode = function(key) {
@@ -776,13 +881,10 @@ Profile.prototype.getSelectedKeymaps = function() {
 Profile.prototype.getSelectedBinds = function() {
   var nodes = this.bindListElem.childNodes;
   var arr = [];
-  for(var a = 0;a < nodes.length;a++) {
-    var node = nodes[a];
-    if(node.selected) {
-      var bind = this.getBindById(parseInt(node.value));
-      if(bind) arr.push(bind);
-    }
-  }
+  $(".bind.ui-selected").each(function(index, elem) {
+    var bind = this.getBindById(parseInt(elem.value));
+    if(bind) arr.push(bind);
+  }.bind(this));
   return arr;
 }
 
@@ -1032,8 +1134,15 @@ Bind.prototype.remove = function() {
 
 Bind.prototype.name = function() {
   if(this.keymap) return "[" + this.hwid + "] " + this.origin + " -> " + this.keymap.name + (this.label !== "" ? " (" + this.label + ")" : "");
-  // if(this.actions.press.length > 0 || this.actions.release.length > 0) return this.origin + " -> " + "Custom" + (this.label !== "" ? " (" + this.label + ")" : "");
   return "[" + this.hwid + "] " + this.origin + " -> " + this.key + (this.label !== "" ? " (" + this.label + ")" : "");
+}
+
+Bind.prototype.nameLimited = function() {
+  var name = this.name();
+  if(name.length > Core.maxBindNameLength()) {
+    name = name.slice(0, Core.maxBindNameLength() - 3) + "...";
+  }
+  return name;
 }
 
 Bind.prototype.refresh = function() {
@@ -1041,6 +1150,7 @@ Bind.prototype.refresh = function() {
   for(var a = 0;a < this.parent.binds.length;a++) {
     var bind = this.parent.binds[a];
     if(bind !== this && bind.origin === this.origin && bind.hwid === this.hwid) {
+      document.getElementById("bind-select").removeChild(bind.elem);
       bind.remove();
       a--;
     }
@@ -1152,6 +1262,7 @@ Button.prototype.onClick = function() {
         bind.origin = Core.waitForInput.keycode.toLowerCase();
         bind.hwid = Core.waitForInput.hwid;
         bind.refresh();
+        Core.createBindElement(bind);
       }
       Core.waitForInput.setActive(false);
       Core.refresh();

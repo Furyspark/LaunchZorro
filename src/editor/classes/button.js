@@ -59,6 +59,7 @@ Button.prototype.onClick = function() {
         bind.origin = Core.waitForInput.keycode.toLowerCase();
         bind.hwid = Core.waitForInput.hwid;
         bind.refresh();
+        Core.createBindElement(bind);
       }
       Core.waitForInput.setActive(false);
       Core.refresh();

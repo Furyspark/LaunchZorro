@@ -19,6 +19,7 @@ Bind.prototype.initMembers = function() {
   this.toggleActive = false;
   this.held = false;
   this.hwid = "any";
+  this.elem = null;
 }
 
 Bind.prototype.keymap = function() {

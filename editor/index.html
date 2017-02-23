@@ -31,7 +31,9 @@
       <input type="text" id="keymap-label-edit" oninput="Core.inputKeymapLabel();" placeholder="Label"></input>
       <br>
       <select multiple id="keymap-select" onclick="Core.selectKeymap();"></select>
-      <select multiple id="bind-select" onclick="Core.selectBind();"></select>
+      <div id="bind-select-container">
+        <ul id="bind-select"></ul>
+      </div>
       <br>
       <button onclick="Core.buttonAddKeymap();">Add Keymap</button>
       <button onclick="Core.buttonRemoveKeymap();">Remove Keymap</button>

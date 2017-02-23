@@ -79,13 +79,10 @@ Profile.prototype.getSelectedKeymaps = function() {
 Profile.prototype.getSelectedBinds = function() {
   var nodes = this.bindListElem.childNodes;
   var arr = [];
-  for(var a = 0;a < nodes.length;a++) {
-    var node = nodes[a];
-    if(node.selected) {
-      var bind = this.getBindById(parseInt(node.value));
-      if(bind) arr.push(bind);
-    }
-  }
+  $(".bind.ui-selected").each(function(index, elem) {
+    var bind = this.getBindById(parseInt(elem.value));
+    if(bind) arr.push(bind);
+  }.bind(this));
   return arr;
 }
 
