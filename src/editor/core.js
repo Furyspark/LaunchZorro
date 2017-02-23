@@ -82,6 +82,8 @@ Core.createNewProfile = function() {
   this.profile.addKeymap("Default");
   this.profileLocation = "";
   document.getElementById("profile-name").innerHTML = "New Profile";
+  this.removeBindElements();
+  this.createBindElements();
   this.profile.deselectBind();
 }
 
@@ -271,7 +273,8 @@ Core.createBindElement = function(bind) {
   elem.value = bind.id.toString();
   bind.elem = elem;
   // Handle
-  var handleElem = document.createElement("div");
+  var handleElem = document.createElement("img");
+  handleElem.src = this.getBindImageSrc(bind);
   elem.appendChild(handleElem);
   handleElem.className = "handle";
   // Name
@@ -282,6 +285,12 @@ Core.createBindElement = function(bind) {
   // Return result
   this.bindListElement().appendChild(elem);
   return elem;
+}
+
+Core.getBindImageSrc = function(bind) {
+  var result = "../icons/devices/" + bind.hwid + ".png";
+  console.log(result);
+  return result;
 }
 
 Core.bindListElement = function() {

@@ -34,8 +34,8 @@ Bind.prototype.remove = function() {
 }
 
 Bind.prototype.name = function() {
-  if(this.keymap) return "[" + this.hwid + "] " + this.origin + " -> " + this.keymap.name + (this.label !== "" ? " (" + this.label + ")" : "");
-  return "[" + this.hwid + "] " + this.origin + " -> " + this.key + (this.label !== "" ? " (" + this.label + ")" : "");
+  if(this.keymap) this.origin + " -> " + this.keymap.name + (this.label !== "" ? " (" + this.label + ")" : "");
+  return this.origin + " -> " + this.key + (this.label !== "" ? " (" + this.label + ")" : "");
 }
 
 Bind.prototype.nameLimited = function() {

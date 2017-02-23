@@ -3,8 +3,8 @@ var debugMode = false;
 var programInfo = {
   version: {
     major: 0,
-    minor: 1,
-    build: 7,
+    minor: 2,
+    build: 0,
     toString: function() {
       return this.major.toString() + "." + this.minor.toString() + "." + this.build.toString();
     }
