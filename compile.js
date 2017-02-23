@@ -61,6 +61,15 @@ function copyFile(src, dest, callback) {
   });
 }
 
+var mainSources = [
+  "src/main/header.js",
+  "src/main/core.js",
+  "src/main/configmanager.js",
+  "src/main/app.js",
+  "src/main/ipcmain.js",
+  "src/main/footer.js"
+];
+
 var sources = [
   "src/header.js",
   "src/signal.js",
@@ -96,11 +105,10 @@ var editorExtendedSources = [
   "src/editor/extended/footer.js"
 ];
 
-var fileCount = 3;
+var fileCount = 4;
+concat(mainSources, "main.js", { separator: "\n" }, TestPackage);
 concat(sources, "app.js", { separator: "\n" }, TestPackage);
-
 concat(editorSources, "editor/app.js", { separator: "\n" }, TestPackage);
-
 concat(editorExtendedSources, "editor/extended.js", { separator: "\n" }, TestPackage);
 
 function TestPackage() {

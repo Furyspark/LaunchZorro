@@ -2,7 +2,7 @@ LaunchZorro*/
 bin
 node_modules
 .atom-build.json
-app.js
+./app.js
 conf.json
 *.sublime-*
 core-config.json
