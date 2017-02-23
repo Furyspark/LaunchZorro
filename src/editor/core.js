@@ -359,9 +359,8 @@ Core.selectKeymap = function() {
 
 Core.selectBind = function() {
   var binds = this.profile.getSelectedBinds();
-  if(binds.length !== 1) {
-    this.profile.deselectBind();
-  } else {
+  this.profile.deselectBind();
+  if(binds.length === 1) {
     this.profile.selectBind(binds[0]);
   }
 }
