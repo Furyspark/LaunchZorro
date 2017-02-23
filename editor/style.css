@@ -45,6 +45,7 @@ button:hover {
   background: rgb(0, 24, 96);
   border-radius: 4px;
   border: 1px solid rgba(0, 0, 0, 0);
+  cursor: hand;
 }
 .bind:hover {
   border: 1px solid white;

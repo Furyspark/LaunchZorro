@@ -288,8 +288,8 @@ Core.createBindElement = function(bind) {
 }
 
 Core.getBindImageSrc = function(bind) {
-  var result = "../icons/devices/" + bind.hwid + ".png";
-  console.log(result);
+  var result = path.resolve(".", "icons/devices/" + bind.hwid + ".png");
+  // this.setCoreMessage(result, 25000);
   return result;
 }
 
@@ -388,7 +388,6 @@ Core.extraAction = function(type) {
 }
 
 Core.loadButtons = function() {
-  // document.getElementById("core-message").innerHTML = path.join(__dirname, "editor");
   fs.readFile(__dirname + "/static/data/buttons.json", function(err, data) {
     if(err) throw err;
     var btnConf = JSON.parse(data.toString());
