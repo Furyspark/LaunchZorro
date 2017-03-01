@@ -292,7 +292,7 @@ $Core.start = function() {
 
   $Categories.refresh();
 
-  // $Core.setPriority();
+  $Core.setPriority();
 };
 
 $Core.fileExists = function(path, callback) {
@@ -433,7 +433,8 @@ $Core.onConfLoaded = function() {
 };
 
 $Core.setPriority = function() {
-  var app = spawn("wmic", ["process", "where", "name=\"" + process.argv[1].split("/").slice(-1) + "\"", "CALL", "setpriority", "\"high priority\""], { shell: true });
+  var processName = process.argv[0].split(/[\\\/]/).slice(-1)[0];
+  var app = spawn("wmic", ["process", "where", "name=\"" + processName + "\"", "CALL", "setpriority", "\"high priority\""], { shell: true });
 }
 
 $Core.selectLHC = function(value) {
