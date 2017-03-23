@@ -46,12 +46,12 @@ Bind.prototype.press = function() {
 
     if(!this._toggle || (this._toggle && !this.toggleActive)) {
       if(this._toggle) this.toggleActive = true;
-      this.sequence.down.onEnd.addOnce(this, this.sequenceDownEndFunction);
+      this.sequence.down.onEnd.addOnce(this.sequenceDownEndFunction, this);
       this.fireSequence(this.sequence.down);
     }
     else if(this._toggle && this.toggleActive) {
       if(this._toggle) this.toggleActive = false;
-      this.sequence.up.onEnd.addOnce(this, this.sequenceUpEndFunction);
+      this.sequence.up.onEnd.addOnce(this.sequenceUpEndFunction, this);
       this.fireSequence(this.sequence.up);
     }
   }
@@ -61,7 +61,7 @@ Bind.prototype.release = function() {
   this.held = false;
 
   if(!this._toggle) {
-    this.sequence.up.onEnd.addOnce(this, this.sequenceUpEndFunction);
+    this.sequence.up.onEnd.addOnce(this.sequenceUpEndFunction, this);
     this.fireSequence(this.sequence.up);
   }
 }
@@ -70,7 +70,7 @@ Bind.prototype.sequenceDownEndFunction = function() {
   // Rapidfire
   if(this._rapidfire > 0 && this.held) {
     this._rapidfireId = window.setTimeout(function() {
-      this.sequence.up.onEnd.addOnce(this, this.sequenceUpEndFunction);
+      this.sequence.up.onEnd.addOnce(this.sequenceUpEndFunction, this);
       this.fireSequence(this.sequence.up);
     }.bind(this), this._rapidfire);
   }
@@ -80,7 +80,7 @@ Bind.prototype.sequenceUpEndFunction = function() {
   // Rapidfire
   if(this._rapidfire > 0 && this.held) {
     this._rapidfireId = window.setTimeout(function() {
-      this.sequence.down.onEnd.addOnce(this, this.sequenceDownEndFunction);
+      this.sequence.down.onEnd.addOnce(this.sequenceDownEndFunction, this);
       this.fireSequence(this.sequence.down);
     }.bind(this), this._rapidfire);
   }

@@ -2,49 +2,67 @@ function Signal() {
   this.initialize.apply(this, arguments);
 }
 
-Signal.prototype.constructor = Signal;
+
+Signal.sortFunction = function(a, b) {
+  if(a.priority < b.priority) return -1;
+  if(a.priority > b.priority) return 1;
+  return 0;
+}
+
 
 Signal.prototype.initialize = function() {
-  this.initMembers();
+  this._bindings = [];
 }
 
-Signal.prototype.initMembers = function() {
-  this.listeners = [];
+Signal.prototype.add = function(callback, context, args, priority) {
+  if(args === undefined) args = [];
+  if(priority === undefined) priority = 50;
+  this._bindings.push({
+    callback: callback,
+    context: context,
+    args: args,
+    once: false,
+    priority: priority
+  });
 }
 
-Signal.prototype.dispatch = function() {
-  var arr = [];
-  for(var a = 0;a < this.listeners.length;a++) {
-    var listener = this.listeners[a];
-    arr.push(listener);
-    if(listener.once) {
-      this.listeners.splice(a, 1);
-      a--;
+Signal.prototype.addOnce = function(callback, context, args, priority) {
+  if(!args) args = [];
+  if(!priority && priority !== 0) priority = 50;
+  this._bindings.push({
+    callback: callback,
+    context: context,
+    args: args,
+    once: true,
+    priority: priority
+  });
+}
+
+Signal.prototype.remove = function(callback, context) {
+  for(var a = 0;a < this._bindings.length;a++) {
+    var obj = this._bindings[a];
+    if(obj.callback === callback && obj.context === context) {
+      this._bindings.splice(a, 1);
+      return true;
     }
   }
-
-  for(var a = 0;a < arr.length;a++) {
-    var listener = arr[a];
-    if(listener.listener) listener.callback.apply(listener.listener, listener.arguments);
-  }
+  return false;
 }
 
-Signal.prototype.remove = function(object, callback) {
-  for(var a = 0;a < this.listeners.length;a++) {
-    var listener = this.listeners[a];
-    if(listener.listener === object && listener.callback === callback) {
-      this.listeners.splice(a, 1);
+Signal.prototype.dispatch = function(params) {
+  var binds = [];
+  for(var a = 0;a < this._bindings.length;a++) {
+    var bind = this._bindings[a];
+    if(bind.once) {
+      this._bindings.splice(a, 1);
       a--;
     }
+    binds.push(bind);
   }
-}
-
-Signal.prototype.add = function(object, callback, arguments) {
-  if(!arguments || !arguments instanceof Array) arguments = [];
-  this.listeners.push({ listener: object, callback: callback, arguments: arguments, once: false });
-}
-
-Signal.prototype.addOnce = function(object, callback, arguments) {
-  if(!arguments || !arguments instanceof Array) arguments = [];
-  this.listeners.push({ listener: object, callback: callback, arguments: arguments, once: true });
+  binds = binds.sort(Signal.sortFunction);
+  for(var a = 0;a < binds.length;a++) {
+    var bind = binds[a];
+    if(params) bind.callback.apply(bind.context, params);
+    else bind.callback.apply(bind.context, bind.args);
+  }
 }
