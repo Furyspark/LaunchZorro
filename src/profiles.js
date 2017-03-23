@@ -189,6 +189,7 @@ $Profiles.closeProfile = function() {
 }
 
 $Profiles.setProfileInfo = function(name) {
+  if(!name) name = "N/A";
   var elem = document.getElementById("info_current_profile");
   elem.innerHTML = "Current Profile: " + name;
   Overwolf.sendMessage(name, true);
