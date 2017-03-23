@@ -544,7 +544,11 @@ ipcRenderer.on("core", function(event, args) {
             var category = args[3];
             var profile = args[4];
             $Core.selectLHC(lhc);
+            $Core.onLHCSelect();
             $Core.selectMouse(mouse);
+            $Core.onMouseSelect();
+            $Categories.select(category);
+            $Profiles.select(profile);
             $Profiles.loadProfile(mouse + "/" + lhc + "/" + category + "/" + profile);
           }
           if($Core._configLoaded) f();

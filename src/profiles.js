@@ -117,7 +117,7 @@ $Profiles.select = function(value) {
   for(var a = 0;a < nodes.length;a++) {
     var node = nodes[a];
     if(node.value === value) {
-      node.selected = true;
+      this.selectElem(node);
     }
   }
 }
