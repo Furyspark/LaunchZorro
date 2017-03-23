@@ -4,7 +4,7 @@ var programInfo = {
   version: {
     major: 0,
     minor: 2,
-    build: 2,
+    build: 3,
     toString: function() {
       return this.major.toString() + "." + this.minor.toString() + "." + this.build.toString();
     }
