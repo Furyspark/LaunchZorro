@@ -19,6 +19,8 @@ Profile.prototype.initMembers = function() {
   this._whitelistLoading = false;
   this._mouseFuncHeld = [];
   this._bindDb = {};
+  this.onError = new Signal();
+  this.onLoad = new Signal();
 }
 
 Profile.prototype.core = function() {
@@ -27,8 +29,13 @@ Profile.prototype.core = function() {
 
 Profile.prototype.loadProfile = function(url) {
   fs.readFile(url, function(err, data) {
+    if(err) {
+      this.onError.dispatch();
+      return;
+    }
     this._source = JSON.parse(data);
     this.applySource();
+    this.onLoad.dispatch();
   }.bind(this));
 
   this._whitelistLoading = true;

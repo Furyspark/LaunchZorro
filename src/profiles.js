@@ -138,37 +138,40 @@ $Profiles.onSelect = function() {
 };
 
 $Profiles.loadProfile = function(url) {
+  var lhc = "";
+  var mouse = "";
+  var category = "";
+  var profileName = "";
   if(!url) {
     var selected = this.getSelected();
     if(selected && this.baseDir() !== "") {
-      var profileName = selected.value;
-      this.setProfileInfo(profileName);
+      profileName = selected.value;
       var profilePath = this.baseDir() + profileName + ".json";
-
       this.profile = new Profile(profilePath);
-
       // Set current data
-      var lhc = $Core.LHCElement().value;
-      var mouse = $Core.MouseElement().value;
-      var category = $Categories.getSelected().value;
-      var profile = profileName;
-      this.current.lhc = lhc;
-      this.current.mouse = mouse;
-      this.current.category = category;
-      this.current.profile = profile;
-      // Add to recent profiles
-      $Core.addRecentProfile(lhc, mouse, category, profile);
+      lhc = $Core.LHCElement().value;
+      mouse = $Core.MouseElement().value;
+      category = $Categories.getSelected().value;
     }
   }
   else {
     var dirs = url.split(/[\/\\]/);
-    var mouse = dirs[0];
-    var lhc = dirs[1];
-    var category = dirs[2];
-    var profileName = dirs[3];
+    mouse = dirs[0];
+    lhc = dirs[1];
+    category = dirs[2];
+    profileName = dirs[3];
     var profilePath = "profiles/" + url + ".json";
     this.profile = new Profile(profilePath);
-    this.setProfileInfo(profileName);
+  }
+  if(!this.profile) return;
+  this.setProfileInfo(profileName);
+  // Error callback
+  this.profile.onError.addOnce(function() {
+    this.profile = null;
+    this.setProfileInfo();
+  }, this);
+  // Load callback
+  this.profile.onLoad.addOnce(function() {
     // Set current data
     this.current.mouse = mouse;
     this.current.lhc = lhc;
@@ -177,7 +180,7 @@ $Profiles.loadProfile = function(url) {
     this.refresh();
     // Add to recent profiles
     $Core.addRecentProfile(lhc, mouse, category, profileName);
-  }
+  }, this);
 }
 
 $Profiles.closeProfile = function() {
