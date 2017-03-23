@@ -39,6 +39,9 @@ $Core._recentProfiles = [];
 $Core._coreMsgTimeout = null;
 $Core._waitForWhitelistKey = false;
 
+$Core.onConfigLoaded = new Signal();
+$Core._configLoaded = false;
+
 
 
 $Core.start = function() {
@@ -231,6 +234,9 @@ $Core.onConfLoaded = function() {
 
   }
   $Core.loadGlobalProfiles();
+
+  $Core._configLoaded = true;
+  $Core.onConfigLoaded.dispatch();
 };
 
 $Core.setPriority = function() {
