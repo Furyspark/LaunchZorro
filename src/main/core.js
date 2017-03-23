@@ -31,6 +31,16 @@ Core.createMainWindow = function() {
   this.mainWindow.webContents.on("devtools-opened", function() {
     this.mainWindow.focus();
   }.bind(this));
+
+  this.mainWindow.webContents.on("dom-ready", function() {
+    if(autostart.mouse !== "" || autostart.lhc !== "" || autostart.category !== "" || autostart.profile !== "") {
+      StartProfile(autostart.mouse, autostart.lhc, autostart.category, autostart.profile);
+      autostart.mouse = "";
+      autostart.lhc = "";
+      autostart.category = "";
+      autostart.profile = "";
+    }
+  }.bind(this));
 }
 
 Core.createEditorWindow = function() {

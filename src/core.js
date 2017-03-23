@@ -187,7 +187,10 @@ $Core.loadGlobalProfiles = function() {
 
 $Core.loadRecentProfiles = function() {
   fs.readFile("recent.json", function(err, data) {
-    if(err) console.log(err);
+    if(err) {
+      console.log(err);
+      return;
+    }
     this._recentProfiles = JSON.parse(data);
     $Core.sendRecentProfilesToMain();
   }.bind(this));
@@ -528,6 +531,8 @@ ipcRenderer.on("core", function(event, args) {
           var mouse = args[2];
           var category = args[3];
           var profile = args[4];
+          $Core.selectLHC(lhc);
+          $Core.selectMouse(mouse);
           $Profiles.loadProfile(mouse + "/" + lhc + "/" + category + "/" + profile);
         }
         break;
