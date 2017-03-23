@@ -63,7 +63,7 @@ if(shouldQuit) {
 }
 
 function StartProfile(mouse, lhc, category, profile) {
-  if(mouse === "" || lhc === "" || category === "" || profile === "") return;
+  if(category === "" || profile === "") return;
   if(!Core) return;
   if(!Core.mainWindow) return;
   Core.mainWindow.webContents.send("core", ["profile", "load", lhc, mouse, category, profile]);

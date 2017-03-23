@@ -533,13 +533,22 @@ ipcRenderer.on("core", function(event, args) {
       case "PROFILE":
         if(args.length > 0 && args[0].toUpperCase() === "RELOAD") $Core.reloadProfile(true);
         else if(args.length > 4 && args[0].toUpperCase() === "LOAD") {
-          var lhc = args[1];
-          var mouse = args[2];
-          var category = args[3];
-          var profile = args[4];
-          $Core.selectLHC(lhc);
-          $Core.selectMouse(mouse);
-          $Profiles.loadProfile(mouse + "/" + lhc + "/" + category + "/" + profile);
+          var f = function() {
+            var lhc = args[1];
+            if(lhc === "") {
+              lhc = $Core.LHCElement().value;
+              console.log($Core.LHCElement().value);
+            }
+            var mouse = args[2];
+            if(mouse === "") mouse = $Core.MouseElement().value;
+            var category = args[3];
+            var profile = args[4];
+            $Core.selectLHC(lhc);
+            $Core.selectMouse(mouse);
+            $Profiles.loadProfile(mouse + "/" + lhc + "/" + category + "/" + profile);
+          }
+          if($Core._configLoaded) f();
+          else $Core.onConfigLoaded.addOnce(f, this);
         }
         break;
     }
