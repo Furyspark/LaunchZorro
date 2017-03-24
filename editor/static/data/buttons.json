@@ -811,6 +811,60 @@
 			"hardware_id": "any"
 		},
 		{
+			"label": "Del",
+			"keycode": "delete",
+			"x": 460,
+			"y": 80,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": "Ins",
+			"keycode": "insert",
+			"x": 460,
+			"y": 50,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": "End",
+			"keycode": "end",
+			"x": 490,
+			"y": 80,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": "Home",
+			"keycode": "home",
+			"x": 490,
+			"y": 50,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": "PgDn",
+			"keycode": "pgdn",
+			"x": 520,
+			"y": 80,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": "PgUp",
+			"keycode": "pgup",
+			"x": 520,
+			"y": 50,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
 			"label": "Num7",
 			"keycode": "numpad7",
 			"x": 580,
