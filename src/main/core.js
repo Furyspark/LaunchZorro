@@ -15,14 +15,20 @@ Core.createMainWindow = function() {
     height: 600,
     webPreferences: {
       backgroundThrottling: false
-    }
+    },
+    autoHideMenuBar: true,
+    enableLargerThanScreen: true,
+    show: false
   });
 
   this.mainWindow.loadURL("file://" + __dirname + "/index.html");
-  this.mainWindow.maximize();
-  if(ConfigManager._config.startMinimized) this.mainWindow.hide();
-
-  if(debugMode) this.mainWindow.webContents.openDevTools({mode: "detach"});
+  if(!ConfigManager._config.startMinimized) {
+    this.mainWindow.once("ready-to-show", function() {
+      this.mainWindow.show();
+      this.mainWindow.maximize();
+      if(debugMode) this.mainWindow.webContents.openDevTools({mode: "detach"});
+    }.bind(this));
+  }
 
   this.mainWindow.on("closed", function() {
     this.mainWindow = null;
@@ -51,7 +57,10 @@ Core.createEditorWindow = function() {
 
   this.editorWindow = new BrowserWindow({
     width: 1024,
-    height: 768
+    height: 768,
+    autoHideMenuBar: true,
+    enableLargerThanScreen: true,
+    backgroundColor: "#343434"
   });
 
   this.editorWindow.loadURL("file://" + __dirname + "/editor/index.html");
