@@ -40,7 +40,7 @@ Core.createMainWindow = function() {
 
   this.mainWindow.webContents.on("dom-ready", function() {
     if(autostart.mouse !== "" || autostart.lhc !== "" || autostart.category !== "" || autostart.profile !== "") {
-      StartProfile(autostart.mouse, autostart.lhc, autostart.category, autostart.profile);
+      StartProfile(autostart.mouse, autostart.lhc, autostart.category, autostart.profile, "cli");
       autostart.mouse = "";
       autostart.lhc = "";
       autostart.category = "";

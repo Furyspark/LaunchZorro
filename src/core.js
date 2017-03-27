@@ -120,7 +120,8 @@ $Core.generateConfig = function() {
       lhc: "normal",
       mouse: "normal"
     },
-    startMinimized: false
+    startMinimized: false,
+    blockCLISwitching: false
   };
 
   return result;
@@ -223,6 +224,10 @@ $Core.onConfLoaded = function() {
       var elem = document.getElementById("checkbox-overwolf-server");
       elem.checked = true;
       Overwolf.startServer();
+    }
+    if(conf.blockCLISwitching) {
+      var elem = document.getElementById("checkbox-block-cli-switching");
+      elem.checked = true;
     }
 
     if(doRefresh) {
@@ -517,6 +522,12 @@ $Core.setWhitelistHwidList = function(device) {
   }
 }
 
+$Core.onBlockCLIChange = function() {
+  var elem = document.getElementById("checkbox-block-cli-switching");
+  this.conf.blockCLISwitching = elem.checked;
+  this.saveConfig();
+}
+
 
 //-------------------------------------------------------------------
 // Events
@@ -532,7 +543,7 @@ ipcRenderer.on("core", function(event, args) {
         break;
       case "PROFILE":
         if(args.length > 0 && args[0].toUpperCase() === "RELOAD") $Core.reloadProfile(true);
-        else if(args.length > 4 && args[0].toUpperCase() === "LOAD") {
+        else if(args.length > 5 && args[0].toUpperCase() === "LOAD") {
           var f = function() {
             var lhc = args[1];
             if(lhc === "") {
@@ -543,6 +554,8 @@ ipcRenderer.on("core", function(event, args) {
             if(mouse === "") mouse = $Core.MouseElement().value;
             var category = args[3];
             var profile = args[4];
+            var type = args[5];
+            if(type.toUpperCase() === "CLI" && $Core.conf.blockCLISwitching) return;
             $Core.selectLHC(lhc);
             $Core.onLHCSelect();
             $Core.selectMouse(mouse);
@@ -550,7 +563,7 @@ ipcRenderer.on("core", function(event, args) {
             $Categories.select(category);
             $Profiles.select(profile);
             $Profiles.loadProfile(mouse + "/" + lhc + "/" + category + "/" + profile);
-          }
+          };
           if($Core._configLoaded) f();
           else $Core.onConfigLoaded.addOnce(f, this);
         }

@@ -43,8 +43,7 @@ function SetParameters(args) {
   }
   // Load profile
   if(Core && Core.mainWindow) {
-    console.log(autostart);
-    StartProfile(autostart.mouse, autostart.lhc, autostart.category, autostart.profile);
+    StartProfile(autostart.mouse, autostart.lhc, autostart.category, autostart.profile, "cli");
     autostart.mouse = "";
     autostart.lhc = "";
     autostart.category = "";
@@ -62,11 +61,11 @@ if(shouldQuit) {
   app.quit();
 }
 
-function StartProfile(mouse, lhc, category, profile) {
+function StartProfile(mouse, lhc, category, profile, type) {
   if(category === "" || profile === "") return;
   if(!Core) return;
   if(!Core.mainWindow) return;
-  Core.mainWindow.webContents.send("core", ["profile", "load", lhc, mouse, category, profile]);
+  Core.mainWindow.webContents.send("core", ["profile", "load", lhc, mouse, category, profile, type]);
 }
 
 var systemData = null;
