@@ -1,0 +1,104 @@
+body {
+  background: #21252b;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+p {
+  margin: 0;
+  padding: 0;
+  color: white;
+}
+
+.group {
+  display: inline-block;
+  position: relative;
+  vertical-align: top;
+  padding: 8px;
+  margin: 4px;
+  border: 1px solid #181a1f;
+  border-radius: 0.5em;
+  background: #282c34;
+  color: #abb2b1;
+}
+
+.type_group {
+  width: 600px;
+  height: 64px;
+}
+
+#group_main {
+  width: 740px;
+  height: 540px;
+}
+
+#group_press {
+  width: 280px;
+  height: 400px;
+  overflow-y: scroll;
+}
+
+#group_release {
+  width: 280px;
+  height: 400px;
+  overflow-y: scroll;
+}
+
+#group_actions {
+  width: 120px;
+  height: 400px;
+}
+
+#group_actions button {
+  width: 100%;
+}
+
+#list_actions {
+  left: 80px;
+  top: 16px;
+  width: 240px;
+  margin: 8px;
+}
+
+.actionlist_item {
+  display: list-item;
+  list-style-type: none;
+  width: 100%;
+  height: 40px;
+  background: rgb(0, 24, 96);
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0);
+  cursor: hand;
+}
+
+.actionlist_item.ui-selected {
+  background: #F39814;
+  color: white;
+}
+
+.actionlist_item:hover {
+  border: 1px solid white;
+}
+
+.handle {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  background: rgb(127, 127, 127);
+  vertical-align: middle;
+  margin-left: 4px;
+  margin-right: 4px;
+  cursor: move;
+}
+
+.actionlist_item_content {
+  display: inline-block;
+  vertical-align: middle;
+  height: 100%;
+  line-height: 40px;
+}
+
+.actionlist_item_label {
+  color: white;
+}

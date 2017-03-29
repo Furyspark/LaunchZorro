@@ -36,7 +36,22 @@ ipcMain.on("editor", function(event, args) {
         }
         break;
       case "EXTENDED":
+        if(args.length > 0) {
+          Core.createExtendedBindWindow(args[0]);
+        }
+        break;
+    }
+  }
+});
 
+ipcMain.on("extended", function(event, args) {
+  if(args.length > 0) {
+    var cmd = args.splice(0, 1)[0];
+    switch(cmd.toUpperCase()) {
+      case "GETEXTENDED":
+        if(args.length > 0 && Core.editorWindow && Core.editorWindow.webContents) {
+          Core.editorWindow.webContents.send("extended", ["set", args[0]]);
+        }
         break;
     }
   }

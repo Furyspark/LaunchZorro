@@ -1,0 +1,52 @@
+{
+  "bindings": [
+    [
+      {
+        "alt": 0,
+        "ctrl": 0,
+        "shift": 0,
+        "hardware_id": "any",
+        "rapidfire": 0,
+        "toggle": 0,
+        "label": "",
+        "origin": "r",
+        "key": "ea:extended",
+        "jra": false,
+        "extended": {
+          "press": [
+            {
+              "key": "v",
+              "params": [
+                true
+              ],
+              "type": "key"
+            },
+            {
+              "key": "delay",
+              "params": [
+                800
+              ],
+              "type": "delay"
+            },
+            {
+              "key": "v",
+              "params": [
+                false
+              ],
+              "type": "key"
+            }
+          ],
+          "release": []
+        }
+      }
+    ]
+  ],
+  "keymaps": [
+    {
+      "label": "Default"
+    }
+  ],
+  "options": {
+    "enableDefaults": false
+  }
+}

@@ -16,6 +16,7 @@ Bind.prototype.initMembers = function() {
   this._rapidfire = 0;
   this._rapidfireId = 0;
   this._toggle = false;
+  this._isExtended = false;
   this.toggleActive = false;
   this.held = false;
   this.hwid = "any";
@@ -41,7 +42,7 @@ Bind.prototype.fireSequence = function(sequence) {
 }
 
 Bind.prototype.press = function() {
-  if(!this.held || this._rapidfire === 0) {
+  if(!this.held) {
     this.held = true;
 
     if(!this._toggle || (this._toggle && !this.toggleActive)) {
@@ -60,7 +61,7 @@ Bind.prototype.press = function() {
 Bind.prototype.release = function() {
   this.held = false;
 
-  if(!this._toggle) {
+  if(!this._toggle && !this._isExtended) {
     this.sequence.up.onEnd.addOnce(this.sequenceUpEndFunction, this);
     this.fireSequence(this.sequence.up);
   }
@@ -182,5 +183,23 @@ Bind.prototype.applySource = function(src) {
 Bind.prototype.parseExtraAction = function(action, src) {
   if(action.toUpperCase() === "LOADPROFILE") {
     this.sequence.up.addAction(new Action("loadprofile", src.extra_params[0], src.extra_params[1]));
+  } else if(action.toUpperCase() === "EXTENDED") {
+    this._isExtended = true;
+    this.parseExtendedAction(src);
+  }
+}
+
+Bind.prototype.parseExtendedAction = function(src) {
+  var list = [
+    {srcList: src.extended.press, sequence: this.sequence.down},
+    {srcList: src.extended.release, sequence: this.sequence.up}
+  ];
+  for(var a = 0;a < list.length;a++) {
+    var obj = list[a];
+    for(var b = 0;b < obj.srcList.length;b++) {
+      var srcAction = obj.srcList[b];
+      if(srcAction.type === "key") obj.sequence.addAction(new Action("key", srcAction.key, srcAction.params[0]));
+      else if(srcAction.type === "delay") obj.sequence.addAction(new Action("delay", srcAction.params[0]));
+    }
   }
 }

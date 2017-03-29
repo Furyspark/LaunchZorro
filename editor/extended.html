@@ -2,8 +2,37 @@
   <head>
     <title>Extended Bind</title>
     <script src="extended.js"></script>
-    <link rel="stylesheet" href="style.css"/>
+    <link rel="stylesheet" href="style-extended.css"/>
   </head>
   <body>
+    <!-- Action List -->
+    <select id="list_actions" onchange="Core.onActionChange();">
+    </select>
+    <br>
+    <!-- Action Types -->
+    <!-- Type: Key -->
+    <div id="group_action_types_key" class="group type_group">
+      <!-- <input type="radio" name="group_action_type_key" id="group_action_type_key_pressrelease"><label for="group_action_type_key_pressrelease">Press and Release</label> -->
+      <input type="radio" name="group_action_type_key" id="group_action_type_key_press" checked><label for="group_action_type_key_press">Press</label>
+      <input type="radio" name="group_action_type_key" id="group_action_type_key_release"><label for="group_action_type_key_release">Release</label>
+    </div>
+    <!-- Type: Delay -->
+    <div id="group_action_types_delay" class="group type_group">
+      <input type="text" id="group_action_type_delay_main" value="" placeholder="Delay in ms">
+    </div>
+    <!-- Press List -->
+    <div class="group" id="group_press">
+    </div>
+
+    <!-- Interaction Buttons -->
+    <div class="group" id="group_actions">
+      <button id="button_topress" onclick="Core.toPress();">To Press</button>
+      <button id="button_torelease" onclick="Core.toRelease();">To Release</button>
+      <button id="button_remove" onclick="Core.toRemove();">Remove</button>
+    </div>
+
+    <!-- Release List -->
+    <div class="group" id="group_release">
+    </div>
   </body>
 </html>

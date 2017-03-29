@@ -26,51 +26,69 @@ function Signal() {
   this.initialize.apply(this, arguments);
 }
 
-Signal.prototype.constructor = Signal;
+
+Signal.sortFunction = function(a, b) {
+  if(a.priority < b.priority) return -1;
+  if(a.priority > b.priority) return 1;
+  return 0;
+}
+
 
 Signal.prototype.initialize = function() {
-  this.initMembers();
+  this._bindings = [];
 }
 
-Signal.prototype.initMembers = function() {
-  this.listeners = [];
+Signal.prototype.add = function(callback, context, args, priority) {
+  if(args === undefined) args = [];
+  if(priority === undefined) priority = 50;
+  this._bindings.push({
+    callback: callback,
+    context: context,
+    args: args,
+    once: false,
+    priority: priority
+  });
 }
 
-Signal.prototype.dispatch = function() {
-  var arr = [];
-  for(var a = 0;a < this.listeners.length;a++) {
-    var listener = this.listeners[a];
-    arr.push(listener);
-    if(listener.once) {
-      this.listeners.splice(a, 1);
-      a--;
+Signal.prototype.addOnce = function(callback, context, args, priority) {
+  if(!args) args = [];
+  if(!priority && priority !== 0) priority = 50;
+  this._bindings.push({
+    callback: callback,
+    context: context,
+    args: args,
+    once: true,
+    priority: priority
+  });
+}
+
+Signal.prototype.remove = function(callback, context) {
+  for(var a = 0;a < this._bindings.length;a++) {
+    var obj = this._bindings[a];
+    if(obj.callback === callback && obj.context === context) {
+      this._bindings.splice(a, 1);
+      return true;
     }
   }
-
-  for(var a = 0;a < arr.length;a++) {
-    var listener = arr[a];
-    if(listener.listener) listener.callback.apply(listener.listener, listener.arguments);
-  }
+  return false;
 }
 
-Signal.prototype.remove = function(object, callback) {
-  for(var a = 0;a < this.listeners.length;a++) {
-    var listener = this.listeners[a];
-    if(listener.listener === object && listener.callback === callback) {
-      this.listeners.splice(a, 1);
+Signal.prototype.dispatch = function(params) {
+  var binds = [];
+  for(var a = 0;a < this._bindings.length;a++) {
+    var bind = this._bindings[a];
+    if(bind.once) {
+      this._bindings.splice(a, 1);
       a--;
     }
+    binds.push(bind);
   }
-}
-
-Signal.prototype.add = function(object, callback, arguments) {
-  if(!arguments || !arguments instanceof Array) arguments = [];
-  this.listeners.push({ listener: object, callback: callback, arguments: arguments, once: false });
-}
-
-Signal.prototype.addOnce = function(object, callback, arguments) {
-  if(!arguments || !arguments instanceof Array) arguments = [];
-  this.listeners.push({ listener: object, callback: callback, arguments: arguments, once: true });
+  binds = binds.sort(Signal.sortFunction);
+  for(var a = 0;a < binds.length;a++) {
+    var bind = binds[a];
+    if(params) bind.callback.apply(bind.context, params);
+    else bind.callback.apply(bind.context, bind.args);
+  }
 }
 
 function Input() {
@@ -241,6 +259,9 @@ $Core._recentProfiles = [];
 $Core._coreMsgTimeout = null;
 $Core._waitForWhitelistKey = false;
 
+$Core.onConfigLoaded = new Signal();
+$Core._configLoaded = false;
+
 
 
 $Core.start = function() {
@@ -319,7 +340,8 @@ $Core.generateConfig = function() {
       lhc: "normal",
       mouse: "normal"
     },
-    startMinimized: false
+    startMinimized: false,
+    blockCLISwitching: false
   };
 
   return result;
@@ -423,6 +445,10 @@ $Core.onConfLoaded = function() {
       elem.checked = true;
       Overwolf.startServer();
     }
+    if(conf.blockCLISwitching) {
+      var elem = document.getElementById("checkbox-block-cli-switching");
+      elem.checked = true;
+    }
 
     if(doRefresh) {
       $Profiles.clear();
@@ -433,6 +459,9 @@ $Core.onConfLoaded = function() {
 
   }
   $Core.loadGlobalProfiles();
+
+  $Core._configLoaded = true;
+  $Core.onConfigLoaded.dispatch();
 };
 
 $Core.setPriority = function() {
@@ -713,6 +742,12 @@ $Core.setWhitelistHwidList = function(device) {
   }
 }
 
+$Core.onBlockCLIChange = function() {
+  var elem = document.getElementById("checkbox-block-cli-switching");
+  this.conf.blockCLISwitching = elem.checked;
+  this.saveConfig();
+}
+
 
 //-------------------------------------------------------------------
 // Events
@@ -728,14 +763,29 @@ ipcRenderer.on("core", function(event, args) {
         break;
       case "PROFILE":
         if(args.length > 0 && args[0].toUpperCase() === "RELOAD") $Core.reloadProfile(true);
-        else if(args.length > 4 && args[0].toUpperCase() === "LOAD") {
-          var lhc = args[1];
-          var mouse = args[2];
-          var category = args[3];
-          var profile = args[4];
-          $Core.selectLHC(lhc);
-          $Core.selectMouse(mouse);
-          $Profiles.loadProfile(mouse + "/" + lhc + "/" + category + "/" + profile);
+        else if(args.length > 5 && args[0].toUpperCase() === "LOAD") {
+          var f = function() {
+            var lhc = args[1];
+            if(lhc === "") {
+              lhc = $Core.LHCElement().value;
+              console.log($Core.LHCElement().value);
+            }
+            var mouse = args[2];
+            if(mouse === "") mouse = $Core.MouseElement().value;
+            var category = args[3];
+            var profile = args[4];
+            var type = args[5];
+            if(type.toUpperCase() === "CLI" && $Core.conf.blockCLISwitching) return;
+            $Core.selectLHC(lhc);
+            $Core.onLHCSelect();
+            $Core.selectMouse(mouse);
+            $Core.onMouseSelect();
+            $Categories.select(category);
+            $Profiles.select(profile);
+            $Profiles.loadProfile(mouse + "/" + lhc + "/" + category + "/" + profile);
+          };
+          if($Core._configLoaded) f();
+          else $Core.onConfigLoaded.addOnce(f, this);
         }
         break;
     }
@@ -812,6 +862,7 @@ Bind.prototype.initMembers = function() {
   this._rapidfire = 0;
   this._rapidfireId = 0;
   this._toggle = false;
+  this._isExtended = false;
   this.toggleActive = false;
   this.held = false;
   this.hwid = "any";
@@ -837,17 +888,17 @@ Bind.prototype.fireSequence = function(sequence) {
 }
 
 Bind.prototype.press = function() {
-  if(!this.held || this._rapidfire === 0) {
+  if(!this.held) {
     this.held = true;
 
     if(!this._toggle || (this._toggle && !this.toggleActive)) {
       if(this._toggle) this.toggleActive = true;
-      this.sequence.down.onEnd.addOnce(this, this.sequenceDownEndFunction);
+      this.sequence.down.onEnd.addOnce(this.sequenceDownEndFunction, this);
       this.fireSequence(this.sequence.down);
     }
     else if(this._toggle && this.toggleActive) {
       if(this._toggle) this.toggleActive = false;
-      this.sequence.up.onEnd.addOnce(this, this.sequenceUpEndFunction);
+      this.sequence.up.onEnd.addOnce(this.sequenceUpEndFunction, this);
       this.fireSequence(this.sequence.up);
     }
   }
@@ -856,8 +907,8 @@ Bind.prototype.press = function() {
 Bind.prototype.release = function() {
   this.held = false;
 
-  if(!this._toggle) {
-    this.sequence.up.onEnd.addOnce(this, this.sequenceUpEndFunction);
+  if(!this._toggle && !this._isExtended) {
+    this.sequence.up.onEnd.addOnce(this.sequenceUpEndFunction, this);
     this.fireSequence(this.sequence.up);
   }
 }
@@ -866,7 +917,7 @@ Bind.prototype.sequenceDownEndFunction = function() {
   // Rapidfire
   if(this._rapidfire > 0 && this.held) {
     this._rapidfireId = window.setTimeout(function() {
-      this.sequence.up.onEnd.addOnce(this, this.sequenceUpEndFunction);
+      this.sequence.up.onEnd.addOnce(this.sequenceUpEndFunction, this);
       this.fireSequence(this.sequence.up);
     }.bind(this), this._rapidfire);
   }
@@ -876,7 +927,7 @@ Bind.prototype.sequenceUpEndFunction = function() {
   // Rapidfire
   if(this._rapidfire > 0 && this.held) {
     this._rapidfireId = window.setTimeout(function() {
-      this.sequence.down.onEnd.addOnce(this, this.sequenceDownEndFunction);
+      this.sequence.down.onEnd.addOnce(this.sequenceDownEndFunction, this);
       this.fireSequence(this.sequence.down);
     }.bind(this), this._rapidfire);
   }
@@ -978,6 +1029,24 @@ Bind.prototype.applySource = function(src) {
 Bind.prototype.parseExtraAction = function(action, src) {
   if(action.toUpperCase() === "LOADPROFILE") {
     this.sequence.up.addAction(new Action("loadprofile", src.extra_params[0], src.extra_params[1]));
+  } else if(action.toUpperCase() === "EXTENDED") {
+    this._isExtended = true;
+    this.parseExtendedAction(src);
+  }
+}
+
+Bind.prototype.parseExtendedAction = function(src) {
+  var list = [
+    {srcList: src.extended.press, sequence: this.sequence.down},
+    {srcList: src.extended.release, sequence: this.sequence.up}
+  ];
+  for(var a = 0;a < list.length;a++) {
+    var obj = list[a];
+    for(var b = 0;b < obj.srcList.length;b++) {
+      var srcAction = obj.srcList[b];
+      if(srcAction.type === "key") obj.sequence.addAction(new Action("key", srcAction.key, srcAction.params[0]));
+      else if(srcAction.type === "delay") obj.sequence.addAction(new Action("delay", srcAction.params[0]));
+    }
   }
 }
 
@@ -1276,7 +1345,7 @@ $Categories.select = function(value) {
   for(var a = 0;a < nodes.length;a++) {
     var node = nodes[a];
     if(node.value === value) {
-      node.selected = true;
+      this.selectElem(node);
     }
   }
 }
@@ -1400,7 +1469,7 @@ $Profiles.select = function(value) {
   for(var a = 0;a < nodes.length;a++) {
     var node = nodes[a];
     if(node.value === value) {
-      node.selected = true;
+      this.selectElem(node);
     }
   }
 }
@@ -1421,37 +1490,40 @@ $Profiles.onSelect = function() {
 };
 
 $Profiles.loadProfile = function(url) {
+  var lhc = "";
+  var mouse = "";
+  var category = "";
+  var profileName = "";
   if(!url) {
     var selected = this.getSelected();
     if(selected && this.baseDir() !== "") {
-      var profileName = selected.value;
-      this.setProfileInfo(profileName);
+      profileName = selected.value;
       var profilePath = this.baseDir() + profileName + ".json";
-
       this.profile = new Profile(profilePath);
-
       // Set current data
-      var lhc = $Core.LHCElement().value;
-      var mouse = $Core.MouseElement().value;
-      var category = $Categories.getSelected().value;
-      var profile = profileName;
-      this.current.lhc = lhc;
-      this.current.mouse = mouse;
-      this.current.category = category;
-      this.current.profile = profile;
-      // Add to recent profiles
-      $Core.addRecentProfile(lhc, mouse, category, profile);
+      lhc = $Core.LHCElement().value;
+      mouse = $Core.MouseElement().value;
+      category = $Categories.getSelected().value;
     }
   }
   else {
     var dirs = url.split(/[\/\\]/);
-    var mouse = dirs[0];
-    var lhc = dirs[1];
-    var category = dirs[2];
-    var profileName = dirs[3];
+    mouse = dirs[0];
+    lhc = dirs[1];
+    category = dirs[2];
+    profileName = dirs[3];
     var profilePath = "profiles/" + url + ".json";
     this.profile = new Profile(profilePath);
-    this.setProfileInfo(profileName);
+  }
+  if(!this.profile) return;
+  this.setProfileInfo(profileName);
+  // Error callback
+  this.profile.onError.addOnce(function() {
+    this.profile = null;
+    this.setProfileInfo();
+  }, this);
+  // Load callback
+  this.profile.onLoad.addOnce(function() {
     // Set current data
     this.current.mouse = mouse;
     this.current.lhc = lhc;
@@ -1460,7 +1532,7 @@ $Profiles.loadProfile = function(url) {
     this.refresh();
     // Add to recent profiles
     $Core.addRecentProfile(lhc, mouse, category, profileName);
-  }
+  }, this);
 }
 
 $Profiles.closeProfile = function() {
@@ -1472,6 +1544,7 @@ $Profiles.closeProfile = function() {
 }
 
 $Profiles.setProfileInfo = function(name) {
+  if(!name) name = "N/A";
   var elem = document.getElementById("info_current_profile");
   elem.innerHTML = "Current Profile: " + name;
   Overwolf.sendMessage(name, true);
@@ -1521,6 +1594,8 @@ Profile.prototype.initMembers = function() {
   this._whitelistLoading = false;
   this._mouseFuncHeld = [];
   this._bindDb = {};
+  this.onError = new Signal();
+  this.onLoad = new Signal();
 }
 
 Profile.prototype.core = function() {
@@ -1529,8 +1604,13 @@ Profile.prototype.core = function() {
 
 Profile.prototype.loadProfile = function(url) {
   fs.readFile(url, function(err, data) {
+    if(err) {
+      this.onError.dispatch();
+      return;
+    }
     this._source = JSON.parse(data);
     this.applySource();
+    this.onLoad.dispatch();
   }.bind(this));
 
   this._whitelistLoading = true;

@@ -3,8 +3,8 @@ var debugMode = false;
 var programInfo = {
   version: {
     major: 0,
-    minor: 2,
-    build: 2,
+    minor: 3,
+    build: 0,
     toString: function() {
       return this.major.toString() + "." + this.minor.toString() + "." + this.build.toString();
     }
@@ -43,8 +43,7 @@ function SetParameters(args) {
   }
   // Load profile
   if(Core && Core.mainWindow) {
-    console.log(autostart);
-    StartProfile(autostart.mouse, autostart.lhc, autostart.category, autostart.profile);
+    StartProfile(autostart.mouse, autostart.lhc, autostart.category, autostart.profile, "cli");
     autostart.mouse = "";
     autostart.lhc = "";
     autostart.category = "";
@@ -62,11 +61,11 @@ if(shouldQuit) {
   app.quit();
 }
 
-function StartProfile(mouse, lhc, category, profile) {
-  if(mouse === "" || lhc === "" || category === "" || profile === "") return;
+function StartProfile(mouse, lhc, category, profile, type) {
+  if(category === "" || profile === "") return;
   if(!Core) return;
   if(!Core.mainWindow) return;
-  Core.mainWindow.webContents.send("core", ["profile", "load", lhc, mouse, category, profile]);
+  Core.mainWindow.webContents.send("core", ["profile", "load", lhc, mouse, category, profile, type]);
 }
 
 var systemData = null;
@@ -79,12 +78,14 @@ fs.stat(__dirname + "/system.json", function(err, stats) {
     });
   }
 });
+
 function Core() {}
 
 Core.start = function() {
   this.recentProfiles = [];
   this.mainWindow = null;
   this.editorWindow = null;
+  this.extendedBindWindow = null;
   this.createMainWindow();
   this.createTray();
 }
@@ -96,14 +97,20 @@ Core.createMainWindow = function() {
     height: 600,
     webPreferences: {
       backgroundThrottling: false
-    }
+    },
+    autoHideMenuBar: true,
+    enableLargerThanScreen: true,
+    show: false
   });
 
   this.mainWindow.loadURL("file://" + __dirname + "/index.html");
-  this.mainWindow.maximize();
-  if(ConfigManager._config.startMinimized) this.mainWindow.hide();
-
-  if(debugMode) this.mainWindow.webContents.openDevTools({mode: "detach"});
+  if(!ConfigManager._config.startMinimized) {
+    this.mainWindow.once("ready-to-show", function() {
+      this.mainWindow.show();
+      this.mainWindow.maximize();
+      if(debugMode) this.mainWindow.webContents.openDevTools({mode: "detach"});
+    }.bind(this));
+  }
 
   this.mainWindow.on("closed", function() {
     this.mainWindow = null;
@@ -115,7 +122,7 @@ Core.createMainWindow = function() {
 
   this.mainWindow.webContents.on("dom-ready", function() {
     if(autostart.mouse !== "" || autostart.lhc !== "" || autostart.category !== "" || autostart.profile !== "") {
-      StartProfile(autostart.mouse, autostart.lhc, autostart.category, autostart.profile);
+      StartProfile(autostart.mouse, autostart.lhc, autostart.category, autostart.profile, "cli");
       autostart.mouse = "";
       autostart.lhc = "";
       autostart.category = "";
@@ -132,7 +139,10 @@ Core.createEditorWindow = function() {
 
   this.editorWindow = new BrowserWindow({
     width: 1024,
-    height: 768
+    height: 768,
+    autoHideMenuBar: true,
+    enableLargerThanScreen: true,
+    backgroundColor: "#343434"
   });
 
   this.editorWindow.loadURL("file://" + __dirname + "/editor/index.html");
@@ -146,6 +156,39 @@ Core.createEditorWindow = function() {
 
   this.editorWindow.webContents.on("devtools-opened", function() {
     this.editorWindow.focus();
+  }.bind(this));
+}
+
+Core.createExtendedBindWindow = function(bind) {
+  if(!!this.extendedBindWindow) {
+    this.extendedBindWindow.show();
+    this.extendedBindWindow.webContents.send("initialize", [bind]);
+    return;
+  }
+
+  this.extendedBindWindow = new BrowserWindow({
+    width: 800,
+    height: 600,
+    autoHideMenuBar: true,
+    enableLargerThanScreen: true,
+    backgroundColor: "#343434",
+    resizable: false
+  });
+
+  this.extendedBindWindow.loadURL("file://" + __dirname + "/editor/extended.html");
+
+  if(debugMode) this.extendedBindWindow.openDevTools({mode: "detach"});
+
+  this.extendedBindWindow.on("closed", function() {
+    this.extendedBindWindow = null;
+  }.bind(this));
+
+  this.extendedBindWindow.webContents.on("devtools-opened", function() {
+    this.extendedBindWindow.focus();
+  }.bind(this));
+
+  this.extendedBindWindow.webContents.on("dom-ready", function() {
+    this.extendedBindWindow.webContents.send("initialize", [bind]);
   }.bind(this));
 }
 
@@ -298,7 +341,22 @@ ipcMain.on("editor", function(event, args) {
         }
         break;
       case "EXTENDED":
+        if(args.length > 0) {
+          Core.createExtendedBindWindow(args[0]);
+        }
+        break;
+    }
+  }
+});
 
+ipcMain.on("extended", function(event, args) {
+  if(args.length > 0) {
+    var cmd = args.splice(0, 1)[0];
+    switch(cmd.toUpperCase()) {
+      case "GETEXTENDED":
+        if(args.length > 0 && Core.editorWindow && Core.editorWindow.webContents) {
+          Core.editorWindow.webContents.send("extended", ["set", args[0]]);
+        }
         break;
     }
   }

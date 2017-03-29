@@ -193,6 +193,10 @@ Profile.prototype.selectBindExtraAction = function(bind) {
     if(action.toUpperCase() === "LOADPROFILE") {
       Core.setExtraParamInputs(bind, [{name: "Category", type: "text", value: bind.extraParams[0]}, {name: "Filename", type: "text", value: bind.extraParams[1]}]);
     }
+    // Extended action
+    else if(action.toUpperCase() === "EXTENDED") {
+      Core.setExtraParamInputs(bind, [{name: "Edit", type: "button", callback: Core.extendedBindEdit.bind(Core, bind)}]);
+    }
   }
 }
 

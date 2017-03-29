@@ -49,6 +49,7 @@ Saver.parseBind = function(rawBind, newBind, profile) {
   newBind.origin = rawBind.origin;
 
   if(rawBind.extra_params) newBind.extraParams = rawBind.extra_params;
+  if(rawBind.extended) newBind.extended = rawBind.extended;
 
   if(typeof rawBind.key === "string") {
     newBind.key = rawBind.key;
@@ -83,7 +84,7 @@ Saver.stringifyProfile = function(profile) {
 
   result.options.enableDefaults = document.getElementById("profile-enable-defaults").checked;
 
-  return JSON.stringify(result);
+  return JSON.stringify(result, null, 2);
 }
 
 Saver.parseStringifyBind = function(bind, profile) {
@@ -99,6 +100,7 @@ Saver.parseStringifyBind = function(bind, profile) {
   raw.key = bind.key;
   raw.jra = bind.jra;
   if(bind.extraParams.length && bind.extraParams.length > 0) raw.extra_params = bind.extraParams;
+  if(bind.extended) raw.extended = bind.extended;
 
   if(bind.keymap) {
     for(var a = 0;a < profile.keymaps.length;a++) {

@@ -26,11 +26,14 @@ Core.start = function() {
     hwid: "",
     keymap: null,
     awaitingExtended: false,
-    setActive: function(value) {
+    params: [],
+    setActive: function(value, msg, params) {
       this.active = value;
       if(this.active) {
         this.active = true;
-        Core.buttonInfoElem.innerHTML = "Awaiting input...";
+        if(msg) Core.buttonInfoElem.innerHTML = msg;
+        else Core.buttonInfoElem.innerHTML = "Awaiting input...";
+        if(params) this.params = params;
       }
       else {
         this.keycode = "";
@@ -38,6 +41,7 @@ Core.start = function() {
         this.hwid = "";
         this.keymap = null;
         this.awaitingExtended = false;
+        this.params = [];
         Core.buttonInfoElem.innerHTML = "";
       }
     }
@@ -503,12 +507,15 @@ Core.setExtraParamInputs = function(bind, params) {
   for(var a = 0;a < params.length;a++) {
     var obj = params[a];
     var key = "extraparam" + a.toString() + "_" + obj.type;
-    this.createExtraParam_Text(bind, a, obj);
+    if(obj.type === "text") {
+      this.createExtraParam_Text(bind, a, obj, key);
+    } else if(obj.type === "button") {
+      this.createExtraParam_Button(bind, a, obj, key);
+    }
   }
 }
 
-Core.createExtraParam_Text = function(bind, index, obj) {
-  var key = "extraparam" + index.toString() + "_text";
+Core.createExtraParam_Text = function(bind, index, obj, key) {
   var elem = document.createElement("input");
   this.extraParamInputs.push(elem);
   elem.type = "text";
@@ -521,6 +528,18 @@ Core.createExtraParam_Text = function(bind, index, obj) {
   elem.oninput = function() {
     bind.extraParams[index] = elem.value;
   };
+}
+
+Core.createExtraParam_Button = function(bind, index, obj, key) {
+  var elem = document.createElement("button");
+  this.extraParamInputs.push(elem);
+  elem.id = key;
+  elem.type = "button";
+  elem.className = "extraparam_button";
+  elem.innerHTML = obj.name;
+  document.getElementById("group_action").appendChild(elem);
+  // Add click handler
+  elem.onclick = obj.callback;
 }
 
 Core.clearExtraParamInputs = function() {
@@ -658,11 +677,11 @@ Core.getKeyFromCode = function(key) {
   }
 }
 
-Core.extendedBind = function() {
-  if(this.waitForInput.active && !this.dialogOpen) {
+Core.extendedBindEdit = function(bind) {
+  if(!this.waitForInput.active && !this.dialogOpen) {
     this.dialogOpen = true;
-    this.waitForInput.awaitingExtended = true;
-    ipcRenderer.send("open-window-extended", [this.waitForInput.keycode]);
+    this.waitForInput.setActive(true, "Awaiting Extended Bind...", [bind]);
+    ipcRenderer.send("editor", ["extended", bind]);
   }
 }
 
@@ -678,6 +697,22 @@ ipcRenderer.on("core", function(event, args) {
       case "CLOSE":
         Core._closing = true;
         ipcRenderer.send("editor", ["close"]);
+        break;
+    }
+  }
+});
+
+ipcRenderer.on("extended", function(event, args) {
+  if(args.length > 0) {
+    var cmd = args.splice(0, 1)[0];
+    switch(cmd.toUpperCase()) {
+      case "SET":
+        if(args.length > 0) {
+          var bind = Core.waitForInput.params[0];
+          bind.extended = args[0];
+          Core.dialogOpen = false;
+          Core.waitForInput.setActive(false);
+        }
         break;
     }
   }
@@ -741,6 +776,7 @@ Saver.parseBind = function(rawBind, newBind, profile) {
   newBind.origin = rawBind.origin;
 
   if(rawBind.extra_params) newBind.extraParams = rawBind.extra_params;
+  if(rawBind.extended) newBind.extended = rawBind.extended;
 
   if(typeof rawBind.key === "string") {
     newBind.key = rawBind.key;
@@ -775,7 +811,7 @@ Saver.stringifyProfile = function(profile) {
 
   result.options.enableDefaults = document.getElementById("profile-enable-defaults").checked;
 
-  return JSON.stringify(result);
+  return JSON.stringify(result, null, 2);
 }
 
 Saver.parseStringifyBind = function(bind, profile) {
@@ -791,6 +827,7 @@ Saver.parseStringifyBind = function(bind, profile) {
   raw.key = bind.key;
   raw.jra = bind.jra;
   if(bind.extraParams.length && bind.extraParams.length > 0) raw.extra_params = bind.extraParams;
+  if(bind.extended) raw.extended = bind.extended;
 
   if(bind.keymap) {
     for(var a = 0;a < profile.keymaps.length;a++) {
@@ -1001,6 +1038,10 @@ Profile.prototype.selectBindExtraAction = function(bind) {
     // Load profile
     if(action.toUpperCase() === "LOADPROFILE") {
       Core.setExtraParamInputs(bind, [{name: "Category", type: "text", value: bind.extraParams[0]}, {name: "Filename", type: "text", value: bind.extraParams[1]}]);
+    }
+    // Extended action
+    else if(action.toUpperCase() === "EXTENDED") {
+      Core.setExtraParamInputs(bind, [{name: "Edit", type: "button", callback: Core.extendedBindEdit.bind(Core, bind)}]);
     }
   }
 }

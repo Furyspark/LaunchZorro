@@ -102,6 +102,7 @@ var editorSources = [
 var editorExtendedSources = [
   "src/editor/extended/header.js",
   "src/editor/extended/core.js",
+  "src/editor/extended/action.js",
   "src/editor/extended/footer.js"
 ];
 
