@@ -1,3 +1,13 @@
+var fs = require("fs");
+var path = require("path");
+var spawn = require("child_process").spawn;
+var exec = require("child_process").execFile;
+var interceptionJS = require("./interception/interception");
+var processType = "electron";
+var electron = require("electron");
+var ipcRenderer = electron.ipcRenderer;
+var SocketIOServer = require("socket.io");
+
 var cmdArgs = {
   lhc: "",
   mouse: "",
@@ -218,16 +228,6 @@ Input.isMouseString = function(string) {
   return false;
 }
 
-var fs = require("fs");
-var path = require("path");
-var spawn = require("child_process").spawn;
-var exec = require("child_process").execFile;
-var interceptionJS = require("./interception/interception");
-var processType = "electron";
-var electron = require("electron");
-var ipcRenderer = electron.ipcRenderer;
-var SocketIOServer = require("socket.io");
-
 var $Core = {};
 
 $Core.color = {};
@@ -261,6 +261,8 @@ $Core._waitForWhitelistKey = false;
 
 $Core.onConfigLoaded = new Signal();
 $Core._configLoaded = false;
+
+$Core.baseData = null;
 
 
 
@@ -308,13 +310,24 @@ $Core.start = function() {
   $Core.handler = new interceptionJS();
   $Core.handler.start($Core.handleInterception.bind($Core));
   $Core.loadWhitelist();
-  $Core.loadRecentProfiles();
-  // $Core.initQuickField();
 
   $Categories.refresh();
+  $Core.loadConfig();
 
-  $Core.setPriority();
+  // $Core.setPriority();
 };
+
+$Core.loadConfig = function() {
+  $Core.createBaseDirectories();
+  $Core.loadRecentProfiles();
+  this.conf = this.generateConfig();
+  this.fileExists(this.baseData.baseDir + "/conf.json", function(result) {
+    fs.readFile($Core.baseData.baseDir + "/conf.json", function(err, data) {
+      $Core.conf = JSON.parse(data.toString());
+      $Core.onConfLoaded();
+    });
+  });
+}
 
 $Core.fileExists = function(path, callback) {
   fs.access(path, fs.constants.R_OK, function(err) {
@@ -329,6 +342,15 @@ $Core.isDirectory = function(path, callback) {
     var result = false;
     if(stats.isDirectory()) result = true;
     callback(result);
+  });
+}
+
+$Core.createBaseDirectories = function() {
+  // Create profiles directory
+  fs.mkdir(this.baseData.baseDir + "/profiles", function(err) {
+    if(err) {
+      console.log(err);
+    }
   });
 }
 
@@ -410,7 +432,7 @@ $Core.loadGlobalProfiles = function() {
 }
 
 $Core.loadRecentProfiles = function() {
-  fs.readFile("recent.json", function(err, data) {
+  fs.readFile(this.baseData.baseDir + "/recent.json", function(err, data) {
     if(err) {
       console.log(err);
       return;
@@ -421,7 +443,7 @@ $Core.loadRecentProfiles = function() {
 }
 
 $Core.saveRecentProfiles = function() {
-  fs.writeFile("recent.json", JSON.stringify(this._recentProfiles));
+  fs.writeFile(this.baseData.baseDir + "/recent.json", JSON.stringify(this._recentProfiles));
 }
 
 $Core.onConfLoaded = function() {
@@ -461,8 +483,14 @@ $Core.onConfLoaded = function() {
   $Core.loadGlobalProfiles();
 
   $Core._configLoaded = true;
-  $Core.onConfigLoaded.dispatch();
+  $Core.checkConfig();
 };
+
+$Core.checkConfig = function() {
+  if(!this._configLoaded) return;
+  if(!this.baseData) return;
+  this.onConfigLoaded.dispatch();
+}
 
 $Core.setPriority = function() {
   var processName = process.argv[0].split(/[\\\/]/).slice(-1)[0];
@@ -588,23 +616,23 @@ $Core.handleInterception = function(keyCode, keyDown, keyE0, hwid, deviceType, m
     this.saveWhitelist();
     this.clearCoreMessage();
   }
-  else if(prof && keyName === this.conf.suspend_key) {
+  else if(!!prof && keyName === this.conf.suspend_key) {
     sendDefault = false;
     if(keyDown) {
       prof.toggleSuspend();
     }
   }
-  if(!overridden && this._superGlobalProfile && this._superGlobalProfile.shouldHandle(keyName, hwid, deviceType, { ignoreWhitelist: true })) {
+  if(!overridden && !!this._superGlobalProfile && this._superGlobalProfile.shouldHandle(keyName, hwid, deviceType, { ignoreWhitelist: true })) {
     sendDefault = false;
     overridden = this._superGlobalProfile.isOverriding(keyName, hwid);
     this._superGlobalProfile.handleInterception(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y);
   }
-  if(!overridden && this._globalProfile && this._globalProfile.shouldHandle(keyName, hwid, deviceType, {})) {
+  if(!overridden && !!this._globalProfile && this._globalProfile.shouldHandle(keyName, hwid, deviceType, {})) {
     sendDefault = false;
     overridden = this._globalProfile.isOverriding(keyName, hwid);
     this._globalProfile.handleInterception(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y);
   }
-  if(!overridden && prof && prof.shouldHandle(keyName, hwid, deviceType, {})) {
+  if(!overridden && !!prof && prof.shouldHandle(keyName, hwid, deviceType, {})) {
     sendDefault = false;
     overridden = prof.isOverriding(keyName, hwid);
     prof.handleInterception(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y);
@@ -652,7 +680,7 @@ $Core.onUsingWhitelistChange = function() {
 }
 
 $Core.saveConfig = function() {
-  fs.writeFile("conf.json", JSON.stringify(this.conf), function(err) {} );
+  fs.writeFile(this.baseData.baseDir + "/conf.json", JSON.stringify(this.conf, null, 2), function(err) {} );
 }
 
 $Core.initQuickField = function() {
@@ -768,7 +796,6 @@ ipcRenderer.on("core", function(event, args) {
             var lhc = args[1];
             if(lhc === "") {
               lhc = $Core.LHCElement().value;
-              console.log($Core.LHCElement().value);
             }
             var mouse = args[2];
             if(mouse === "") mouse = $Core.MouseElement().value;
@@ -787,6 +814,10 @@ ipcRenderer.on("core", function(event, args) {
           if($Core._configLoaded) f();
           else $Core.onConfigLoaded.addOnce(f, this);
         }
+        break;
+      case "BASEDATA":
+        $Core.baseData = args[0];
+        $Core.start();
         break;
     }
   }
@@ -1330,7 +1361,7 @@ $Categories.selectElem = function(elem) {
 $Categories.baseDir = function() {
   var mouseDir = $Core.devices.mice[$Core.MouseElement().value].dirName;
   var lhcDir = $Core.devices.lhc[$Core.LHCElement().value].dirName;
-  return "profiles/" + mouseDir + "/" + lhcDir + "/";
+  return $Core.baseData.baseDir + "/profiles/" + mouseDir + "/" + lhcDir + "/";
 };
 
 $Categories.onSelect = function() {
@@ -1480,7 +1511,7 @@ $Profiles.baseDir = function() {
   var catElem = $Categories.getSelected();
   if(catElem) {
     var catDir = catElem.value;
-    return "profiles/" + mouseDir + "/" + lhcDir + "/" + catDir + "/";
+    return $Core.baseData.baseDir + "/profiles/" + mouseDir + "/" + lhcDir + "/" + catDir + "/";
   }
   return "";
 };
@@ -1512,7 +1543,7 @@ $Profiles.loadProfile = function(url) {
     lhc = dirs[1];
     category = dirs[2];
     profileName = dirs[3];
-    var profilePath = "profiles/" + url + ".json";
+    var profilePath = $Core.baseData.baseDir + "/profiles/" + url + ".json";
     this.profile = new Profile(profilePath);
   }
   if(!this.profile) return;
@@ -1596,6 +1627,7 @@ Profile.prototype.initMembers = function() {
   this._bindDb = {};
   this.onError = new Signal();
   this.onLoad = new Signal();
+  this.loaded = false;
 }
 
 Profile.prototype.core = function() {
@@ -1610,6 +1642,7 @@ Profile.prototype.loadProfile = function(url) {
     }
     this._source = JSON.parse(data);
     this.applySource();
+    this.loaded = true;
     this.onLoad.dispatch();
   }.bind(this));
 
@@ -1895,33 +1928,24 @@ if(processType !== "node") {
     $Audio.addSound("refresh", "assets/audio/profiler_refresh.wav");
     $Audio.addSound("activate_profile", "assets/audio/activate_profile.wav");
     $Audio.addSound("deactivate_profile", "assets/audio/deactivate_profile.wav");
-    $Core.start();
-    // Load conf.json
-    $Core.conf = $Core.generateConfig();
-    $Core.fileExists("conf.json", function(result) {
-      if(result) {
-        var conf = JSON.parse(fs.readFileSync("conf.json"));
-        Object.assign($Core.conf, conf);
-      }
-      $Core.onConfLoaded();
-    });
+    // $Core.start();
   };
 }
 else {
-  $Core.start();
-  $Core.fileExists("conf.json", function(result) {
-    if(result) {
-      var conf = JSON.parse(fs.readFileSync("conf.json"));
-      Object.assign($Core.conf, conf);
-    }
-    $Core.onConfLoaded();
-  });
-  // Auto load profile
-  if(!cmdArgs.lhc) {
-    cmdArgs.lhc = $Core.conf.defaultDevice.lhc;
-  }
-  if(!cmdArgs.mouse) {
-    cmdArgs.mouse = $Core.conf.defaultDevice.mouse;
-  }
-  $Profiles.loadProfile(cmdArgs.mouse + "/" + cmdArgs.lhc + "/" + cmdArgs.category + "/" + cmdArgs.profile);
+  // $Core.start();
+  // $Core.fileExists("conf.json", function(result) {
+  //   if(result) {
+  //     var conf = JSON.parse(fs.readFileSync("conf.json"));
+  //     Object.assign($Core.conf, conf);
+  //   }
+  //   $Core.onConfLoaded();
+  // });
+  // // Auto load profile
+  // if(!cmdArgs.lhc) {
+  //   cmdArgs.lhc = $Core.conf.defaultDevice.lhc;
+  // }
+  // if(!cmdArgs.mouse) {
+  //   cmdArgs.mouse = $Core.conf.defaultDevice.mouse;
+  // }
+  // $Profiles.loadProfile(cmdArgs.mouse + "/" + cmdArgs.lhc + "/" + cmdArgs.category + "/" + cmdArgs.profile);
 }

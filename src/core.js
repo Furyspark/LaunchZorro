@@ -32,6 +32,8 @@ $Core._waitForWhitelistKey = false;
 $Core.onConfigLoaded = new Signal();
 $Core._configLoaded = false;
 
+$Core.baseData = null;
+
 
 
 $Core.start = function() {
@@ -78,13 +80,24 @@ $Core.start = function() {
   $Core.handler = new interceptionJS();
   $Core.handler.start($Core.handleInterception.bind($Core));
   $Core.loadWhitelist();
-  $Core.loadRecentProfiles();
-  // $Core.initQuickField();
 
   $Categories.refresh();
+  $Core.loadConfig();
 
-  $Core.setPriority();
+  // $Core.setPriority();
 };
+
+$Core.loadConfig = function() {
+  $Core.createBaseDirectories();
+  $Core.loadRecentProfiles();
+  this.conf = this.generateConfig();
+  this.fileExists(this.baseData.baseDir + "/conf.json", function(result) {
+    fs.readFile($Core.baseData.baseDir + "/conf.json", function(err, data) {
+      $Core.conf = JSON.parse(data.toString());
+      $Core.onConfLoaded();
+    });
+  });
+}
 
 $Core.fileExists = function(path, callback) {
   fs.access(path, fs.constants.R_OK, function(err) {
@@ -99,6 +112,15 @@ $Core.isDirectory = function(path, callback) {
     var result = false;
     if(stats.isDirectory()) result = true;
     callback(result);
+  });
+}
+
+$Core.createBaseDirectories = function() {
+  // Create profiles directory
+  fs.mkdir(this.baseData.baseDir + "/profiles", function(err) {
+    if(err) {
+      console.log(err);
+    }
   });
 }
 
@@ -180,7 +202,7 @@ $Core.loadGlobalProfiles = function() {
 }
 
 $Core.loadRecentProfiles = function() {
-  fs.readFile("recent.json", function(err, data) {
+  fs.readFile(this.baseData.baseDir + "/recent.json", function(err, data) {
     if(err) {
       console.log(err);
       return;
@@ -191,7 +213,7 @@ $Core.loadRecentProfiles = function() {
 }
 
 $Core.saveRecentProfiles = function() {
-  fs.writeFile("recent.json", JSON.stringify(this._recentProfiles));
+  fs.writeFile(this.baseData.baseDir + "/recent.json", JSON.stringify(this._recentProfiles));
 }
 
 $Core.onConfLoaded = function() {
@@ -231,8 +253,14 @@ $Core.onConfLoaded = function() {
   $Core.loadGlobalProfiles();
 
   $Core._configLoaded = true;
-  $Core.onConfigLoaded.dispatch();
+  $Core.checkConfig();
 };
+
+$Core.checkConfig = function() {
+  if(!this._configLoaded) return;
+  if(!this.baseData) return;
+  this.onConfigLoaded.dispatch();
+}
 
 $Core.setPriority = function() {
   var processName = process.argv[0].split(/[\\\/]/).slice(-1)[0];
@@ -358,23 +386,23 @@ $Core.handleInterception = function(keyCode, keyDown, keyE0, hwid, deviceType, m
     this.saveWhitelist();
     this.clearCoreMessage();
   }
-  else if(prof && keyName === this.conf.suspend_key) {
+  else if(!!prof && keyName === this.conf.suspend_key) {
     sendDefault = false;
     if(keyDown) {
       prof.toggleSuspend();
     }
   }
-  if(!overridden && this._superGlobalProfile && this._superGlobalProfile.shouldHandle(keyName, hwid, deviceType, { ignoreWhitelist: true })) {
+  if(!overridden && !!this._superGlobalProfile && this._superGlobalProfile.shouldHandle(keyName, hwid, deviceType, { ignoreWhitelist: true })) {
     sendDefault = false;
     overridden = this._superGlobalProfile.isOverriding(keyName, hwid);
     this._superGlobalProfile.handleInterception(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y);
   }
-  if(!overridden && this._globalProfile && this._globalProfile.shouldHandle(keyName, hwid, deviceType, {})) {
+  if(!overridden && !!this._globalProfile && this._globalProfile.shouldHandle(keyName, hwid, deviceType, {})) {
     sendDefault = false;
     overridden = this._globalProfile.isOverriding(keyName, hwid);
     this._globalProfile.handleInterception(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y);
   }
-  if(!overridden && prof && prof.shouldHandle(keyName, hwid, deviceType, {})) {
+  if(!overridden && !!prof && prof.shouldHandle(keyName, hwid, deviceType, {})) {
     sendDefault = false;
     overridden = prof.isOverriding(keyName, hwid);
     prof.handleInterception(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y);
@@ -422,7 +450,7 @@ $Core.onUsingWhitelistChange = function() {
 }
 
 $Core.saveConfig = function() {
-  fs.writeFile("conf.json", JSON.stringify(this.conf), function(err) {} );
+  fs.writeFile(this.baseData.baseDir + "/conf.json", JSON.stringify(this.conf, null, 2), function(err) {} );
 }
 
 $Core.initQuickField = function() {
@@ -556,6 +584,10 @@ ipcRenderer.on("core", function(event, args) {
           if($Core._configLoaded) f();
           else $Core.onConfigLoaded.addOnce(f, this);
         }
+        break;
+      case "BASEDATA":
+        $Core.baseData = args[0];
+        $Core.start();
         break;
     }
   }

@@ -1,5 +1,7 @@
 function Core() {}
 
+Core.baseData = null;
+
 Core.start = function() {
   this.profile = null;
   this.dialogOpen = false;
@@ -47,6 +49,9 @@ Core.start = function() {
 
 Core.maxBindNameLength = function() {
   return 42;
+}
+
+Core.loadConfig = function() {
 }
 
 Core.setCoreMessage = function(msg, time) {
@@ -99,7 +104,8 @@ Core.buttonLoad = function() {
       filter: [
         { name: "Profiles", extensions: ["json"] }
       ],
-      properties: ["openFile", "createDirectory"]
+      properties: ["openFile", "createDirectory"],
+      defaultPath: this.baseData.baseDir + "/profiles/"
     }, function(filenames) {
       if(filenames && filenames.length > 0) Core.loadProfile(filenames[0]);
       else Core.cancelDialog();
@@ -125,7 +131,8 @@ Core.buttonSaveAs = function() {
       title: "Save Profile",
       filters: [
         { name: "Profiles", extensions: ["json"] }
-      ]
+      ],
+      defaultPath: this.baseData.baseDir + "/profiles/"
     }, function(filename) {
       if(filename) Core.saveProfile(filename);
       else Core.cancelDialog();
@@ -682,6 +689,10 @@ ipcRenderer.on("core", function(event, args) {
       case "CLOSE":
         Core._closing = true;
         ipcRenderer.send("editor", ["close"]);
+        break;
+      case "BASEDATA":
+        Core.baseData = args[0];
+        Core.loadConfig();
         break;
     }
   }

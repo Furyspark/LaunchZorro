@@ -40,6 +40,12 @@ Core.createMainWindow = function() {
   }.bind(this));
 
   this.mainWindow.webContents.on("dom-ready", function() {
+    this.mainWindow.webContents.send("core", [
+      "basedata",
+      {
+        baseDir: baseDir
+      }
+    ]);
     if(autostart.mouse !== "" || autostart.lhc !== "" || autostart.category !== "" || autostart.profile !== "") {
       StartProfile(autostart.mouse, autostart.lhc, autostart.category, autostart.profile, "cli");
       autostart.mouse = "";
@@ -75,6 +81,15 @@ Core.createEditorWindow = function() {
 
   this.editorWindow.webContents.on("devtools-opened", function() {
     this.editorWindow.focus();
+  }.bind(this));
+
+  this.editorWindow.webContents.on("dom-ready", function() {
+    this.editorWindow.webContents.send("core", [
+      "basedata",
+      {
+        baseDir: baseDir
+      }
+    ]);
   }.bind(this));
 }
 

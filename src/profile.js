@@ -21,6 +21,7 @@ Profile.prototype.initMembers = function() {
   this._bindDb = {};
   this.onError = new Signal();
   this.onLoad = new Signal();
+  this.loaded = false;
 }
 
 Profile.prototype.core = function() {
@@ -35,6 +36,7 @@ Profile.prototype.loadProfile = function(url) {
     }
     this._source = JSON.parse(data);
     this.applySource();
+    this.loaded = true;
     this.onLoad.dispatch();
   }.bind(this));
 

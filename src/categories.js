@@ -93,7 +93,7 @@ $Categories.selectElem = function(elem) {
 $Categories.baseDir = function() {
   var mouseDir = $Core.devices.mice[$Core.MouseElement().value].dirName;
   var lhcDir = $Core.devices.lhc[$Core.LHCElement().value].dirName;
-  return "profiles/" + mouseDir + "/" + lhcDir + "/";
+  return $Core.baseData.baseDir + "/profiles/" + mouseDir + "/" + lhcDir + "/";
 };
 
 $Categories.onSelect = function() {

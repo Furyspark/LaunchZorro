@@ -4,7 +4,7 @@ var programInfo = {
   version: {
     major: 0,
     minor: 3,
-    build: 0,
+    build: 1,
     toString: function() {
       return this.major.toString() + "." + this.minor.toString() + "." + this.build.toString();
     }
@@ -20,6 +20,8 @@ var BrowserWindow = electron.BrowserWindow;
 var ipcMain = electron.ipcMain;
 var Menu = electron.Menu;
 var Tray = electron.Tray;
+
+var baseDir = app.getPath("userData")
 
 var recentProfiles = [];
 
@@ -121,6 +123,12 @@ Core.createMainWindow = function() {
   }.bind(this));
 
   this.mainWindow.webContents.on("dom-ready", function() {
+    this.mainWindow.webContents.send("core", [
+      "basedata",
+      {
+        baseDir: baseDir
+      }
+    ]);
     if(autostart.mouse !== "" || autostart.lhc !== "" || autostart.category !== "" || autostart.profile !== "") {
       StartProfile(autostart.mouse, autostart.lhc, autostart.category, autostart.profile, "cli");
       autostart.mouse = "";
@@ -156,6 +164,15 @@ Core.createEditorWindow = function() {
 
   this.editorWindow.webContents.on("devtools-opened", function() {
     this.editorWindow.focus();
+  }.bind(this));
+
+  this.editorWindow.webContents.on("dom-ready", function() {
+    this.editorWindow.webContents.send("core", [
+      "basedata",
+      {
+        baseDir: baseDir
+      }
+    ]);
   }.bind(this));
 }
 

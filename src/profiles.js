@@ -128,7 +128,7 @@ $Profiles.baseDir = function() {
   var catElem = $Categories.getSelected();
   if(catElem) {
     var catDir = catElem.value;
-    return "profiles/" + mouseDir + "/" + lhcDir + "/" + catDir + "/";
+    return $Core.baseData.baseDir + "/profiles/" + mouseDir + "/" + lhcDir + "/" + catDir + "/";
   }
   return "";
 };
@@ -160,7 +160,7 @@ $Profiles.loadProfile = function(url) {
     lhc = dirs[1];
     category = dirs[2];
     profileName = dirs[3];
-    var profilePath = "profiles/" + url + ".json";
+    var profilePath = $Core.baseData.baseDir + "/profiles/" + url + ".json";
     this.profile = new Profile(profilePath);
   }
   if(!this.profile) return;

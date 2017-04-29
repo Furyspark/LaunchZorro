@@ -21,6 +21,8 @@ var ipcMain = electron.ipcMain;
 var Menu = electron.Menu;
 var Tray = electron.Tray;
 
+var baseDir = app.getPath("userData")
+
 var recentProfiles = [];
 
 var autostart = {
