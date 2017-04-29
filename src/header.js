@@ -1,3 +1,13 @@
+var fs = require("fs");
+var path = require("path");
+var spawn = require("child_process").spawn;
+var exec = require("child_process").execFile;
+var interceptionJS = require("./interception/interception");
+var processType = "electron";
+var electron = require("electron");
+var ipcRenderer = electron.ipcRenderer;
+var SocketIOServer = require("socket.io");
+
 var cmdArgs = {
   lhc: "",
   mouse: "",
