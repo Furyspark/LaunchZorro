@@ -538,7 +538,6 @@ ipcRenderer.on("core", function(event, args) {
             var lhc = args[1];
             if(lhc === "") {
               lhc = $Core.LHCElement().value;
-              console.log($Core.LHCElement().value);
             }
             var mouse = args[2];
             if(mouse === "") mouse = $Core.MouseElement().value;
