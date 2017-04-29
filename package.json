@@ -1,6 +1,6 @@
 {
   "main": "main.js",
-  "name": "launchzorro",
+  "name": "zorro",
   "private": true,
   "scripts": {
     "test": "node compile.js && electron . --debug",
