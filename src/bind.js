@@ -61,7 +61,7 @@ Bind.prototype.press = function() {
 Bind.prototype.release = function() {
   this.held = false;
 
-  if(!this._toggle && !this._isExtended) {
+  if(!this._toggle) {
     this.sequence.up.onEnd.addOnce(this.sequenceUpEndFunction, this);
     this.fireSequence(this.sequence.up);
   }
