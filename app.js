@@ -711,6 +711,17 @@ $Core.buttonWhitelist = function() {
   this._waitForWhitelistKey = true;
 }
 
+$Core.buttonWhitelistRemove = function() {
+  var device = $("#group-whitelist").val();
+  if(!this._whitelist[device]) return;
+  var hwid = $("#group-whitelist-hwids").val();
+  var index = this._whitelist[device].indexOf(hwid);
+  if(index === -1) return;
+  this._whitelist[device].splice(index, 1);
+  $("#group-whitelist-hwids option:selected").remove();
+  this.saveWhitelist();
+}
+
 $Core.loadWhitelist = function() {
   this._whitelist = null;
   fs.readFile("profiler/whitelist.json", function(err, data) {
