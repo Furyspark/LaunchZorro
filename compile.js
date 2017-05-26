@@ -49,7 +49,7 @@ var packagerOptions = {
   name: "Zorro",
   out: "bin",
   platform: "win32",
-  electronVersion: "1.4.12"
+  electronVersion: "1.6.8"
 };
 
 function copyFile(src, dest, callback) {

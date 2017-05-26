@@ -417,17 +417,18 @@ $Core.sendRecentProfilesToMain = function() {
 
 $Core.loadGlobalProfiles = function() {
   // Load super global profile
-  this.fileExists("profiles/global.json", function(result) {
+  var superGlobalProfilePath = this.baseData.baseDir + "/profiles/global.json";
+  this.fileExists(superGlobalProfilePath, function(result) {
     this._superGlobalProfile = null;
-    if(result) this._superGlobalProfile = new Profile("profiles/global.json");
+    if(result) this._superGlobalProfile = new Profile(superGlobalProfilePath);
   }.bind(this));
   // Load global profile
   var mouseDir = this.devices.mice[this.MouseElement().value].dirName;
   var lhcDir = this.devices.lhc[this.LHCElement().value].dirName;
-  var profilePath = "profiles/" + mouseDir + "/" + lhcDir + "/global.json";
-  this.fileExists(profilePath, function(result) {
+  var globalProfilePath = this.baseData.baseDir + "/profiles/" + mouseDir + "/" + lhcDir + "/global.json";
+  this.fileExists(globalProfilePath, function(result) {
     this._globalProfile = null;
-    if(result) this._globalProfile = new Profile(profilePath);
+    if(result) this._globalProfile = new Profile(globalProfilePath);
   }.bind(this));
 }
 
@@ -938,7 +939,7 @@ Bind.prototype.press = function() {
 Bind.prototype.release = function() {
   this.held = false;
 
-  if(!this._toggle && !this._isExtended) {
+  if(!this._toggle) {
     this.sequence.up.onEnd.addOnce(this.sequenceUpEndFunction, this);
     this.fireSequence(this.sequence.up);
   }
