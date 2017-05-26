@@ -4,8 +4,7 @@
   "private": true,
   "scripts": {
     "test": "node compile.js && electron . --debug",
-    "test-cmd": "node compile.js && electron . --debug --mouse=normal --lhc=normal --category=\"MMO\" --profile=\"World of Warcraft\"",
-    "woof": "electron . --debug"
+    "test-cmd": "node compile.js && electron . --debug --mouse=normal --lhc=normal --category=\"MMO\" --profile=\"World of Warcraft\""
   },
   "devDependencies": {
     "concatenate-files": "^0.1.1",
