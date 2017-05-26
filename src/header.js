@@ -7,6 +7,7 @@ var processType = "electron";
 var electron = require("electron");
 var ipcRenderer = electron.ipcRenderer;
 var SocketIOServer = require("socket.io");
+var $ = jQuery = require("./lib/jquery.js");
 
 var cmdArgs = {
   lhc: "",
