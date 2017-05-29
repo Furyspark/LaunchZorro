@@ -92,10 +92,14 @@ $Core.loadConfig = function() {
   $Core.loadRecentProfiles();
   this.conf = this.generateConfig();
   this.fileExists(this.baseData.baseDir + "/conf.json", function(result) {
-    fs.readFile($Core.baseData.baseDir + "/conf.json", function(err, data) {
-      $Core.conf = JSON.parse(data.toString());
+    if(result) {
+      fs.readFile($Core.baseData.baseDir + "/conf.json", function(err, data) {
+        $Core.conf = JSON.parse(data.toString());
+        $Core.onConfLoaded();
+      });
+    } else {
       $Core.onConfLoaded();
-    });
+    }
   });
 }
 
