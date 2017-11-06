@@ -209,7 +209,7 @@ Core.createTray = function() {
   this.tray = new Tray(__dirname + "/profiler.png");
   this.tray.setToolTip("Zorro");
   this.tray.setContextMenu(this.generateTrayMenu());
-  this.tray.on("double-click", function() { this.mainWindow.show(); }.bind(this));
+  this.tray.on("double-click", function() { Core.createWindow("browser"); }.bind(this));
 }
 
 Core.refreshTray = function() {

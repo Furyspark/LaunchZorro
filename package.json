@@ -2,7 +2,7 @@
   "main": "main.js",
   "name": "zorro",
   "private": true,
-  "version": "0.3.2",
+  "version": "0.3.4",
   "description": "An input profiler based on Interception",
   "author": {
     "name": "Tijmen Bok",
@@ -11,7 +11,7 @@
   "scripts": {
     "test": "gulp && electron . --debug",
     "test-cmd": "node compile.js && electron . --debug --mouse=normal --lhc=normal --category=\"MMO\" --profile=\"World of Warcraft\"",
-    "dist": "electron-builder"
+    "dist": "node compile.js"
   },
   "devDependencies": {
     "concatenate-files": "^0.1.1",

@@ -557,17 +557,36 @@ Core.buttonWhitelistRemove = function() {
 Core.loadWhitelist = function() {
   this._whitelist = null;
   fs.readFile(this.baseData.baseDir + "/whitelist.json", function(err, data) {
-    if(err) console.log(err);
-    this._whitelist = JSON.parse(data);
-    for(var a in this._whitelist) {
-      this.addWhitelistDeviceToGroup(a);
+    if(err) {
+      if(err.code !== "ENOENT") console.log(err);
+      this._whitelist = { lhc: [], mice: [] };
+    }
+    else {
+      this._whitelist = JSON.parse(data);
+      for(var a in this._whitelist) {
+        this.addWhitelistDeviceToGroup(a);
+      }
+    }
+    // Add unknown mice to whitelist
+    for(var a in Core.devices.mice) {
+      if(!this._whitelist[a] && a !== "normal") {
+        this._whitelist[a] = [];
+        this.addWhitelistDeviceToGroup(a);
+      }
+    }
+    // Add unknown left-handed controllers to whitelist
+    for(var a in Core.devices.lhc) {
+      if(!this._whitelist[a] && a !== "normal") {
+        this._whitelist[a] = [];
+        this.addWhitelistDeviceToGroup(a);
+      }
     }
     Core.onSelectWhitelistDevice();
   }.bind(this));
 }
 
 Core.saveWhitelist = function() {
-  fs.writeFile(this.baseData.baseDir + "/whitelist.json", JSON.stringify(this._whitelist));
+  fs.writeFile(this.baseData.baseDir + "/whitelist.json", JSON.stringify(this._whitelist, null, 2));
 }
 
 Core.addToWhitelist = function(device, hwid) {

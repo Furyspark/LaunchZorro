@@ -11,6 +11,14 @@
     {
       "name": "G13",
       "dirName": "g13"
+    },
+    {
+      "name": "Nostromo",
+      "dirName": "nostromo"
+    },
+    {
+      "name": "Tartarus",
+      "dirName": "tartarus"
     }
   ],
   "mice": [
