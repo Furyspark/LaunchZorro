@@ -13,17 +13,17 @@ ConfigManager.generateConfig = function() {
 }
 
 ConfigManager.save = function() {
-  fs.writeFileSync("core-config.json", JSON.stringify(this._config));
+  fs.writeFileSync(ConfigManager.getFileLocation(), JSON.stringify(this._config));
 }
 
 ConfigManager.load = function() {
-  fs.stat("core-config.json", function(err, stats) {
+  fs.stat(ConfigManager.getFileLocation(), function(err, stats) {
     if(err) {
       console.log(err);
       return;
     }
     if(stats.isFile()) {
-      fs.readFile("core-config.json", function(err, data) {
+      fs.readFile(ConfigManager.getFileLocation(), function(err, data) {
         if(err) {
           console.log(err);
           return;
@@ -35,14 +35,18 @@ ConfigManager.load = function() {
 
   var stats;
   try {
-    stats = fs.statSync("core-config.json");
+    stats = fs.statSync(ConfigManager.getFileLocation());
   } catch(e) {
     // if(e) console.log(e);
   } finally {
-    if(stats && stats.isFile()) this._config = JSON.parse(fs.readFileSync("core-config.json"));
+    if(stats && stats.isFile()) this._config = JSON.parse(fs.readFileSync(ConfigManager.getFileLocation()));
     else ConfigManager.generateConfig();
   }
 }
+
+ConfigManager.getFileLocation = function() {
+  return __dirname + "/core-config.json";
+};
 
 
 ConfigManager.load();

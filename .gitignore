@@ -7,3 +7,6 @@ conf.json
 *.sublime-*
 core-config.json
 recent.json
+yarn.lock
+profiles
+icons

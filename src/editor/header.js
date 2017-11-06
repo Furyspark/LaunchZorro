@@ -3,8 +3,7 @@ var path = require("path");
 var dialog = require("electron").remote.dialog;
 var ipcRenderer = require("electron").ipcRenderer;
 
-window.$ = window.jQuery = require(__dirname + "/../lib/jquery.js");
-require(__dirname + "/../lib/jquery-ui.js");
+window.$ = window.jQuery = require("jquery");
 
 ipcRenderer.on("dialog-closed", function(event, arg) {
   if(arg === "extended") {

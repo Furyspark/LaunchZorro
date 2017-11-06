@@ -1,18 +1,8 @@
 var debugMode = false;
 
-var programInfo = {
-  version: {
-    major: 0,
-    minor: 3,
-    build: 2,
-    toString: function() {
-      return this.major.toString() + "." + this.minor.toString() + "." + this.build.toString();
-    }
-  }
-};
-
-
-var fs = require("fs");
+let fs = require("fs");
+let nodePath = require("path");
+var ncp = require("ncp").ncp;
 
 var electron = require("electron");
 var app = electron.app;
@@ -21,7 +11,9 @@ var ipcMain = electron.ipcMain;
 var Menu = electron.Menu;
 var Tray = electron.Tray;
 
-var baseDir = app.getPath("userData")
+let packageInfo = JSON.parse(fs.readFileSync("package.json"));
+var baseDir = app.getPath("userData").replace(/\\/g, "/")
+var appDir = __dirname;
 
 var recentProfiles = [];
 
@@ -37,25 +29,26 @@ function SetParameters(args) {
   var mode = "";
   for(var a = 0;a < args.length;a++) {
     var argument = args[a];
-    if(argument.toUpperCase() === "--DEBUG") debugMode = true;
+    if(argument === "--debug") debugMode = true;
     else if(argument.match(/\-\-CATEGORY\=([a-zA-Z0-9 ]+)/i)) autostart.category = RegExp.$1;
     else if(argument.match(/\-\-PROFILE\=([a-zA-Z0-9 ]+)/i)) autostart.profile = RegExp.$1;
     else if(argument.match(/\-\-MOUSE\=([a-zA-Z0-9 ]+)/i)) autostart.mouse = RegExp.$1;
     else if(argument.match(/\-\-LHC\=([a-zA-Z0-9 ]+)/i)) autostart.lhc = RegExp.$1;
   }
   // Load profile
-  if(Core && Core.mainWindow) {
-    StartProfile(autostart.mouse, autostart.lhc, autostart.category, autostart.profile, "cli");
-    autostart.mouse = "";
-    autostart.lhc = "";
-    autostart.category = "";
-    autostart.profile = "";
-  }
+  // if(Core && Core._windows["browser"]) {
+  //   StartProfile(autostart.mouse, autostart.lhc, autostart.category, autostart.profile, "cli");
+  //   autostart.mouse = "";
+  //   autostart.lhc = "";
+  //   autostart.category = "";
+  //   autostart.profile = "";
+  // }
 }
 
 SetParameters(process.argv);
 
 var shouldQuit = app.makeSingleInstance(function(args, cwd) {
+  console.log("SHOULD QUIT");
   SetParameters(args);
 });
 

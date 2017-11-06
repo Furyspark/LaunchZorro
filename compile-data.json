@@ -1,0 +1,90 @@
+{
+  "browser": {
+    "baseDir": "src/browser/",
+    "sources": [
+      "header.js",
+
+      "signal.js",
+
+      "input.js",
+      "core.js",
+
+      "keymap.js",
+      "bind.js",
+      "sequence.js",
+      "action.js",
+      "categories.js",
+
+      "profiles.js",
+      "profile.js",
+
+      "audio.js",
+
+      "overwolf.js",
+
+      "footer.js"
+    ],
+    "target": {
+      "fn": "app.js",
+      "dir": "windows/browser/"
+    }
+  },
+
+  "editor": {
+    "baseDir": "src/editor/",
+    "sources": [
+      "header.js",
+
+      "core.js",
+      "saver.js",
+
+      "classes/profile.js",
+      "classes/keymap.js",
+      "classes/bind.js",
+      "classes/button_layout.js",
+      "classes/button.js",
+
+      "footer.js"
+    ],
+    "target": {
+      "fn": "app.js",
+      "dir": "windows/editor/"
+    }
+  },
+
+  "editorExtended": {
+    "baseDir": "src/editor/extended/",
+    "sources": [
+      "header.js",
+
+      "core.js",
+
+      "action.js",
+
+      "footer.js"
+    ],
+    "target": {
+      "fn": "extended.js",
+      "dir": "windows/editor/"
+    }
+  },
+
+  "main": {
+    "baseDir": "src/main/",
+    "sources": [
+      "header.js",
+
+      "core.js",
+      "configmanager.js",
+
+      "app.js",
+
+      "ipcmain.js",
+      "footer.js"
+    ],
+    "target": {
+      "fn": "main.js",
+      "dir": "./"
+    }
+  }
+}

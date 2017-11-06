@@ -3,17 +3,17 @@ ipcMain.on("core", function(event, args) {
     var cmd = args.splice(0, 1)[0];
     switch(cmd.toUpperCase()) {
       case "WINDOW":
-        if(args.length > 0 && args[0].toUpperCase() === "HIDE" && Core.mainWindow) {
-          Core.mainWindow.hide();
+        if(args.length > 0 && args[0].toUpperCase() === "HIDE" && Core.hasWindow("browser")) {
+          Core.getWindow("browser").hide();
         }
         break;
       case "CLOSE":
-        if(Core.mainWindow) Core.mainWindow.close();
-        if(Core.editorWindow) Core.editorWindow.close();
+        if(Core.hasWindow("browser")) Core.getWindow("browser").close();
+        if(Core.hasWindow("editor")) Core.getWindow("editor").close();
         app.quit();
         break;
       case "EDITOR":
-        if(args.length > 0 && args[0].toUpperCase() === "OPEN") Core.createEditorWindow();
+        if(args.length > 0 && args[0].toUpperCase() === "OPEN") Core.createWindow("editor");
         break;
       case "RECENTPROFILES":
         Core.recentProfiles = args[0];
@@ -28,16 +28,19 @@ ipcMain.on("editor", function(event, args) {
     var cmd = args.splice(0, 1)[0];
     switch(cmd.toUpperCase()) {
       case "SAVED":
-        Core.mainWindow.send("core", ["profile", "reload"]);
+        Core.getWindow("browser").send("core", ["profile", "reload"]);
         break;
       case "WINDOW":
-        if(args.length > 0 && args[0].toUpperCase() === "HIDE" && Core.editorWindow) {
-          Core.editorWindow.hide();
+        if(args.length > 0 && args[0].toUpperCase() === "HIDE" && Core.hasWindow("editor")) {
+          Core.getWindow("editor").hide();
         }
         break;
       case "EXTENDED":
         if(args.length > 0) {
-          Core.createExtendedBindWindow(args[0]);
+          let win = Core.createWindow("extendedBind");
+          win.webContents.once("dom-ready", function() {
+            win.webContents.send("initialize", { baseData: Core.getBaseData(), bind: args[0] });
+          }.bind(this));
         }
         break;
     }
@@ -49,8 +52,8 @@ ipcMain.on("extended", function(event, args) {
     var cmd = args.splice(0, 1)[0];
     switch(cmd.toUpperCase()) {
       case "GETEXTENDED":
-        if(args.length > 0 && Core.editorWindow && Core.editorWindow.webContents) {
-          Core.editorWindow.webContents.send("extended", ["set", args[0]]);
+        if(args.length > 0 && Core.hasWindow("editor") && Core.getWindow("editor").webContents) {
+          Core.getWindow("editor").webContents.send("extended", ["set", args[0]]);
         }
         break;
     }

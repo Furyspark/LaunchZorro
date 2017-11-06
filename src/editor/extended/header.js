@@ -2,10 +2,11 @@ var ipcRenderer = require("electron").ipcRenderer;
 var bind = null;
 
 ipcRenderer.on("initialize", function(event, args) {
-  bind = args[0];
+  Core.baseData = args.baseData;
+  bind = args.bind;
   Core.start();
 });
 
 
-window.$ = window.jQuery = require(__dirname + "/../lib/jquery.js");
-require(__dirname + "/../lib/jquery-ui.js");
+window.$ = window.jQuery = require("../../lib/jquery.js");
+require("../../lib/jquery-ui.js");

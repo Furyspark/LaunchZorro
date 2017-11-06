@@ -1,18 +1,8 @@
 var debugMode = false;
 
-var programInfo = {
-  version: {
-    major: 0,
-    minor: 3,
-    build: 2,
-    toString: function() {
-      return this.major.toString() + "." + this.minor.toString() + "." + this.build.toString();
-    }
-  }
-};
-
-
-var fs = require("fs");
+let fs = require("fs");
+let nodePath = require("path");
+var ncp = require("ncp").ncp;
 
 var electron = require("electron");
 var app = electron.app;
@@ -21,7 +11,9 @@ var ipcMain = electron.ipcMain;
 var Menu = electron.Menu;
 var Tray = electron.Tray;
 
-var baseDir = app.getPath("userData")
+let packageInfo = JSON.parse(fs.readFileSync("package.json"));
+var baseDir = app.getPath("userData").replace(/\\/g, "/")
+var appDir = __dirname;
 
 var recentProfiles = [];
 
@@ -37,25 +29,26 @@ function SetParameters(args) {
   var mode = "";
   for(var a = 0;a < args.length;a++) {
     var argument = args[a];
-    if(argument.toUpperCase() === "--DEBUG") debugMode = true;
+    if(argument === "--debug") debugMode = true;
     else if(argument.match(/\-\-CATEGORY\=([a-zA-Z0-9 ]+)/i)) autostart.category = RegExp.$1;
     else if(argument.match(/\-\-PROFILE\=([a-zA-Z0-9 ]+)/i)) autostart.profile = RegExp.$1;
     else if(argument.match(/\-\-MOUSE\=([a-zA-Z0-9 ]+)/i)) autostart.mouse = RegExp.$1;
     else if(argument.match(/\-\-LHC\=([a-zA-Z0-9 ]+)/i)) autostart.lhc = RegExp.$1;
   }
   // Load profile
-  if(Core && Core.mainWindow) {
-    StartProfile(autostart.mouse, autostart.lhc, autostart.category, autostart.profile, "cli");
-    autostart.mouse = "";
-    autostart.lhc = "";
-    autostart.category = "";
-    autostart.profile = "";
-  }
+  // if(Core && Core._windows["browser"]) {
+  //   StartProfile(autostart.mouse, autostart.lhc, autostart.category, autostart.profile, "cli");
+  //   autostart.mouse = "";
+  //   autostart.lhc = "";
+  //   autostart.category = "";
+  //   autostart.profile = "";
+  // }
 }
 
 SetParameters(process.argv);
 
 var shouldQuit = app.makeSingleInstance(function(args, cwd) {
+  console.log("SHOULD QUIT");
   SetParameters(args);
 });
 
@@ -85,129 +78,208 @@ function Core() {}
 
 Core.start = function() {
   this.recentProfiles = [];
-  this.mainWindow = null;
-  this.editorWindow = null;
-  this.extendedBindWindow = null;
-  this.createMainWindow();
+  this._windows = {};
+  this.initFileStructure(errors => {
+    if(errors.length > 0) console.log(errors);
+    else Core.postStart();
+  });
+};
+
+Core.initFileStructure = function(callback) {
+  let tasks = 2;
+  let errors = [];
+  let taskDone = function(err) {
+    tasks--;
+    if(err) errors.push(err);
+    if(tasks === 0) callback(errors);
+  };
+  // Copy base whitelist
+  Core.copyFile(nodePath.join(__dirname, "whitelist.json"), nodePath.join(baseDir, "whitelist.json"), true, err => {
+    if(err) taskDone(err);
+    else taskDone();
+  });
+  // Copy base icons
+  ncp(__dirname + "/baseicons", baseDir + "/icons", err => {
+    if(err) taskDone(err);
+    else taskDone();
+  });
+};
+
+Core.copyFile = function(src, dest, overwrite, callback) {
+  fs.readFile(src, (err, data) => {
+    if(err) callback(err);
+    fs.stat(dest, (err, stat) => {
+      if(err && err.code !== "ENOENT") callback(err);
+      else if(err && err.code === "ENOENT") {
+        fs.writeFile(dest, data, (err) => {
+          if(err) callback(err);
+          callback();
+        });
+      }
+      else {
+        if(err && err.code === "ENOENT" && overwrite) {
+          fs.writeFile(dest, data, (err) => {
+            if(err) callback(err);
+            callback();
+          });
+        }
+        else {
+          callback();
+        }
+      }
+    });
+  });
+};
+
+Core.postStart = function() {
+  this.createWindow("browser");
   this.createTray();
-}
 
-Core.createMainWindow = function() {
-  if(!!this.mainWindow) return;
-  this.mainWindow = new BrowserWindow({
-    width: 1024,
-    height: 600,
-    webPreferences: {
-      backgroundThrottling: false
-    },
-    autoHideMenuBar: true,
-    enableLargerThanScreen: true,
-    show: false
-  });
-
-  this.mainWindow.loadURL("file://" + __dirname + "/index.html");
-  if(!ConfigManager._config.startMinimized) {
-    this.mainWindow.once("ready-to-show", function() {
-      this.mainWindow.show();
-      this.mainWindow.maximize();
-      if(debugMode) this.mainWindow.webContents.openDevTools({mode: "detach"});
-    }.bind(this));
-  }
-
-  this.mainWindow.on("closed", function() {
-    this.mainWindow = null;
-  }.bind(this));
-
-  this.mainWindow.webContents.on("devtools-opened", function() {
-    this.mainWindow.focus();
-  }.bind(this));
-
-  this.mainWindow.webContents.on("dom-ready", function() {
-    this.mainWindow.webContents.send("core", [
-      "basedata",
-      {
-        baseDir: baseDir
-      }
-    ]);
-    if(autostart.mouse !== "" || autostart.lhc !== "" || autostart.category !== "" || autostart.profile !== "") {
-      StartProfile(autostart.mouse, autostart.lhc, autostart.category, autostart.profile, "cli");
-      autostart.mouse = "";
-      autostart.lhc = "";
-      autostart.category = "";
-      autostart.profile = "";
+  app.on("window-all-closed", function() {
+    if(process.platform !== "darwin") {
+      app.quit();
     }
-  }.bind(this));
-}
+  });
+};
 
-Core.createEditorWindow = function() {
-  if(!!this.editorWindow) {
-    this.editorWindow.show();
-    return;
+Core.isDebugMode = function() {
+  return debugMode;
+};
+
+Core.hasWindow = function(type) {
+  return this._windows[type] != null;
+};
+
+Core.getWindow = function(type) {
+  return this._windows[type];
+};
+
+Core.createWindow = function(type) {
+  // Show window if window already exists
+  if(this._windows[type]) {
+    this._windows[type].show();
+    return this._windows[type];
+  }
+  // Create window if it doesn't exist yet
+  else {
+    // Create window
+    let win = this._windows[type] = new BrowserWindow(this.getWindowBaseProperties(type));
+
+    // Load URL
+    win.loadURL(this.getWindowURL(type));
+    win.setMenu(null);
+
+    // Configure window
+    this.configureWindow(win, type);
+
+    // Remove reference to window upon closing
+    win.on("closed", function() {
+      this._windows[type] = null;
+    }.bind(this));
+
+    // Make devtools appear below its window initially
+    win.webContents.on("devtools-opened", function() {
+      win.focus();
+    }.bind(this));
+    return win;
+  }
+  return undefined;
+};
+
+Core.getWindowBaseProperties = function(type) {
+  let result = {};
+
+  switch(type) {
+    case "browser":
+      result.width = 1024;
+      result.height = 600;
+      result.webPreferences = { backgroundThrottling: false };
+      result.show = false;
+      break;
+    case "editor":
+      result.width = 1024;
+      result.height = 768;
+      result.backgroundColor = "#343434";
+      result.show = false;
+      break;
+    case "extendedBind":
+      result.width = 800;
+      result.height = 600;
+      result.backgroundColor = "#343434";
+      result.resizable = false;
+      result.show = false;
+      // result.parent = this._windows.editor;
+      break;
   }
 
-  this.editorWindow = new BrowserWindow({
-    width: 1024,
-    height: 768,
-    autoHideMenuBar: true,
-    enableLargerThanScreen: true,
-    backgroundColor: "#343434"
-  });
+  return result;
+};
 
-  this.editorWindow.loadURL("file://" + __dirname + "/editor/index.html");
-  this.editorWindow.maximize();
+Core.getWindowURL = function(type) {
+  switch(type) {
+    case "browser":
+      return nodePath.join(__dirname, "windows/browser", "index.html");
+      break;
+    case "editor":
+      return nodePath.join(__dirname, "windows/editor", "index.html");
+      break;
+    case "extendedBind":
+      return nodePath.join(__dirname, "windows/editor", "extended.html");
+      break;
+  }
+};
 
-  if(debugMode) this.editorWindow.openDevTools({mode: "detach"});
-
-  this.editorWindow.on("closed", function() {
-    this.editorWindow = null;
-  }.bind(this));
-
-  this.editorWindow.webContents.on("devtools-opened", function() {
-    this.editorWindow.focus();
-  }.bind(this));
-
-  this.editorWindow.webContents.on("dom-ready", function() {
-    this.editorWindow.webContents.send("core", [
-      "basedata",
-      {
-        baseDir: baseDir
+Core.configureWindow = function(win, type) {
+  switch(type) {
+    // Browser window specific settings
+    case "browser":
+      if(!ConfigManager._config.startMinimized) {
+        win.once("ready-to-show", function() {
+          win.show();
+          win.maximize();
+          if(this.isDebugMode()) win.webContents.openDevTools({ mode: "detach" });
+        }.bind(this));
       }
-    ]);
-  }.bind(this));
-}
 
-Core.createExtendedBindWindow = function(bind) {
-  if(!!this.extendedBindWindow) {
-    this.extendedBindWindow.show();
-    this.extendedBindWindow.webContents.send("initialize", [bind]);
-    return;
+      win.webContents.once("dom-ready", function() {
+        win.webContents.send("core", ["basedata", this.getBaseData()]);
+        if(autostart.mouse !== "" || autostart.lhc !== "" || autostart.category !== "" || autostart.profile !== "") {
+          StartProfile(autostart.mouse, autostart.lhc, autostart.category, autostart.profile, "cli");
+          autostart.mouse = "";
+          autostart.lhc = "";
+          autostart.category = "";
+          autostart.profile = "";
+        }
+      }.bind(this));
+      break;
+    // Editor window specific settings
+    case "editor":
+      win.once("ready-to-show", function() {
+        win.show();
+        win.maximize();
+        if(this.isDebugMode()) win.webContents.openDevTools({ mode: "detach" });
+      }.bind(this));
+
+      win.webContents.once("dom-ready", function() {
+        win.webContents.send("core", ["basedata", this.getBaseData()]);
+      }.bind(this));
+      break;
+    // Extended bind window specific settings
+    case "extendedBind":
+      win.once("ready-to-show", function() {
+        win.show();
+        if(this.isDebugMode()) win.webContents.openDevTools({ mode: "detach" });
+      }.bind(this));
+      break;
   }
+};
 
-  this.extendedBindWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
-    autoHideMenuBar: true,
-    enableLargerThanScreen: true,
-    backgroundColor: "#343434",
-    resizable: false
-  });
-
-  this.extendedBindWindow.loadURL("file://" + __dirname + "/editor/extended.html");
-
-  if(debugMode) this.extendedBindWindow.openDevTools({mode: "detach"});
-
-  this.extendedBindWindow.on("closed", function() {
-    this.extendedBindWindow = null;
-  }.bind(this));
-
-  this.extendedBindWindow.webContents.on("devtools-opened", function() {
-    this.extendedBindWindow.focus();
-  }.bind(this));
-
-  this.extendedBindWindow.webContents.on("dom-ready", function() {
-    this.extendedBindWindow.webContents.send("initialize", [bind]);
-  }.bind(this));
-}
+Core.getBaseData = function() {
+  return {
+    baseDir: baseDir,
+    rootDir: __dirname
+  };
+};
 
 Core.createTray = function() {
   this.tray = new Tray(__dirname + "/profiler.png");
@@ -229,7 +301,7 @@ Core.generateTrayMenu = function() {
         label: profile.lhc + "/" + profile.mouse + "/" + profile.category + "/" + profile.profile,
         click: function(menuItem, browserWindow, event) {
           var index = menuItem.menu.items.indexOf(menuItem);
-          Core.mainWindow.webContents.send("core", ["profile", "load", profile.lhc, profile.mouse, profile.category, profile.profile]);
+          Core.getWindow("browser").webContents.send("core", ["profile", "load", profile.lhc, profile.mouse, profile.category, profile.profile]);
         }
       };
       recentMenuTemplate.push(item);
@@ -237,19 +309,19 @@ Core.generateTrayMenu = function() {
   }
 
   var menu = Menu.buildFromTemplate([
-    { label: "Zorro v" + programInfo.version.toString(), enabled: false }, // Version
+    { label: "Zorro v" + packageInfo.version, enabled: false }, // Version
     { type: "separator" },
     { label: "Recent", submenu: recentMenuTemplate },
-    { label: "Show", click: function() { Core.mainWindow.show(); } }, // Show Zorro
-    { label: "Editor", click: function() { Core.createEditorWindow(); } }, // Show Editor
+    { label: "Show", click: function() { Core.createWindow("browser"); } }, // Show Zorro
+    { label: "Editor", click: function() { Core.createWindow("editor"); } }, // Show Editor
     { type: "separator" },
     { label: "Start Minimized", type: "checkbox", checked: ConfigManager._config.startMinimized, click: function(menuItem, browserWindow, event) {
       ConfigManager._config.startMinimized = !ConfigManager._config.startMinimized;
       menuItem.checked = ConfigManager._config.startMinimized;
     } },
     { label: "Quit", click: function() { // Quit App
-      if(Core.mainWindow) Core.mainWindow.webContents.send("core", ["close"]);
-      if(Core.editorWindow) Core.editorWindow.webContents.send("core", ["close"]);
+      if(Core.hasWindow("browser")) Core.getWindow("browser").webContents.send("core", ["close"]);
+      if(Core.hasWindow("editor")) Core.getWindow("editor").webContents.send("core", ["close"]);
     } }
   ]);
   return menu;
@@ -270,17 +342,17 @@ ConfigManager.generateConfig = function() {
 }
 
 ConfigManager.save = function() {
-  fs.writeFileSync("core-config.json", JSON.stringify(this._config));
+  fs.writeFileSync(ConfigManager.getFileLocation(), JSON.stringify(this._config));
 }
 
 ConfigManager.load = function() {
-  fs.stat("core-config.json", function(err, stats) {
+  fs.stat(ConfigManager.getFileLocation(), function(err, stats) {
     if(err) {
       console.log(err);
       return;
     }
     if(stats.isFile()) {
-      fs.readFile("core-config.json", function(err, data) {
+      fs.readFile(ConfigManager.getFileLocation(), function(err, data) {
         if(err) {
           console.log(err);
           return;
@@ -292,14 +364,18 @@ ConfigManager.load = function() {
 
   var stats;
   try {
-    stats = fs.statSync("core-config.json");
+    stats = fs.statSync(ConfigManager.getFileLocation());
   } catch(e) {
     // if(e) console.log(e);
   } finally {
-    if(stats && stats.isFile()) this._config = JSON.parse(fs.readFileSync("core-config.json"));
+    if(stats && stats.isFile()) this._config = JSON.parse(fs.readFileSync(ConfigManager.getFileLocation()));
     else ConfigManager.generateConfig();
   }
 }
+
+ConfigManager.getFileLocation = function() {
+  return __dirname + "/core-config.json";
+};
 
 
 ConfigManager.load();
@@ -314,28 +390,22 @@ app.on("quit", function() {
   ConfigManager.save();
 });
 
-app.on("window-all-closed", function() {
-  if(process.platform !== "darwin") {
-    app.quit();
-  }
-});
-
 ipcMain.on("core", function(event, args) {
   if(args.length > 0) {
     var cmd = args.splice(0, 1)[0];
     switch(cmd.toUpperCase()) {
       case "WINDOW":
-        if(args.length > 0 && args[0].toUpperCase() === "HIDE" && Core.mainWindow) {
-          Core.mainWindow.hide();
+        if(args.length > 0 && args[0].toUpperCase() === "HIDE" && Core.hasWindow("browser")) {
+          Core.getWindow("browser").hide();
         }
         break;
       case "CLOSE":
-        if(Core.mainWindow) Core.mainWindow.close();
-        if(Core.editorWindow) Core.editorWindow.close();
+        if(Core.hasWindow("browser")) Core.getWindow("browser").close();
+        if(Core.hasWindow("editor")) Core.getWindow("editor").close();
         app.quit();
         break;
       case "EDITOR":
-        if(args.length > 0 && args[0].toUpperCase() === "OPEN") Core.createEditorWindow();
+        if(args.length > 0 && args[0].toUpperCase() === "OPEN") Core.createWindow("editor");
         break;
       case "RECENTPROFILES":
         Core.recentProfiles = args[0];
@@ -350,16 +420,19 @@ ipcMain.on("editor", function(event, args) {
     var cmd = args.splice(0, 1)[0];
     switch(cmd.toUpperCase()) {
       case "SAVED":
-        Core.mainWindow.send("core", ["profile", "reload"]);
+        Core.getWindow("browser").send("core", ["profile", "reload"]);
         break;
       case "WINDOW":
-        if(args.length > 0 && args[0].toUpperCase() === "HIDE" && Core.editorWindow) {
-          Core.editorWindow.hide();
+        if(args.length > 0 && args[0].toUpperCase() === "HIDE" && Core.hasWindow("editor")) {
+          Core.getWindow("editor").hide();
         }
         break;
       case "EXTENDED":
         if(args.length > 0) {
-          Core.createExtendedBindWindow(args[0]);
+          let win = Core.createWindow("extendedBind");
+          win.webContents.once("dom-ready", function() {
+            win.webContents.send("initialize", { baseData: Core.getBaseData(), bind: args[0] });
+          }.bind(this));
         }
         break;
     }
@@ -371,8 +444,8 @@ ipcMain.on("extended", function(event, args) {
     var cmd = args.splice(0, 1)[0];
     switch(cmd.toUpperCase()) {
       case "GETEXTENDED":
-        if(args.length > 0 && Core.editorWindow && Core.editorWindow.webContents) {
-          Core.editorWindow.webContents.send("extended", ["set", args[0]]);
+        if(args.length > 0 && Core.hasWindow("editor") && Core.getWindow("editor").webContents) {
+          Core.getWindow("editor").webContents.send("extended", ["set", args[0]]);
         }
         break;
     }

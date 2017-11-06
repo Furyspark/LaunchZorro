@@ -1,3 +1,17 @@
+var fs = require("fs");
+var path = require("path");
+var dialog = require("electron").remote.dialog;
+var ipcRenderer = require("electron").ipcRenderer;
+
+window.$ = window.jQuery = require("jquery");
+
+ipcRenderer.on("dialog-closed", function(event, arg) {
+  if(arg === "extended") {
+    Core.dialogOpen = false;
+    Core.waitForInput.awaitingExtended = false;
+  }
+});
+
 function Core() {}
 
 Core.baseData = null;
@@ -719,3 +733,603 @@ window.onbeforeunload = function(event) {
     event.returnValue = false;
   }
 }
+
+function Saver() {
+  console.log("This is a static class.");
+}
+
+Saver.parseProfile = function(obj) {
+  var profile = new Profile();
+  // Add profile options
+  if(obj.options) {
+    if(obj.options.enableDefaults) document.getElementById("profile-enable-defaults").checked = obj.options.enableDefaults;
+  }
+  // Add keymaps
+  for(var a = 0;a < obj.keymaps.length;a++) {
+    var keymap = obj.keymaps[a];
+    profile.addKeymap(keymap.label);
+  }
+  // Add bindings
+  for(var a = 0;a < obj.bindings.length;a++) {
+    var keymap = obj.bindings[a];
+    for(var b = 0;b < keymap.length;b++) {
+      var bind = keymap[b];
+      var newBind = profile.keymaps[a].addBind();
+      this.parseBind(bind, newBind, profile);
+    }
+  }
+
+  return profile;
+}
+
+Saver.parseBind = function(rawBind, newBind, profile) {
+  if(typeof rawBind.alt === "string") newBind.alt = (rawBind.alt === "1" ? true : false);
+  if(typeof rawBind.alt === "number") newBind.alt = (rawBind.alt === 1 ? true : false);
+
+  if(typeof rawBind.ctrl === "string") newBind.ctrl = (rawBind.ctrl === "1" ? true : false);
+  if(typeof rawBind.ctrl === "number") newBind.ctrl = (rawBind.ctrl === 1 ? true : false);
+
+  if(typeof rawBind.shift === "string") newBind.shift = (rawBind.shift === "1" ? true : false);
+  if(typeof rawBind.shift === "number") newBind.shift = (rawBind.shift === 1 ? true : false);
+
+  if(typeof rawBind.rapidfire === "string") newBind.rapidfire = Number(rawBind.rapidfire);
+  if(typeof rawBind.rapidfire === "number") newBind.rapidfire = rawBind.rapidfire;
+
+  if(typeof rawBind.toggle === "string") newBind.toggle = Number(rawBind.toggle);
+  if(typeof rawBind.toggle === "number") newBind.toggle = rawBind.toggle;
+
+  if(rawBind.jra) newBind.jra = rawBind.jra;
+
+  newBind.hwid = rawBind.hardware_id;
+  newBind.label = rawBind.label;
+  newBind.origin = rawBind.origin;
+
+  if(rawBind.extra_params) newBind.extraParams = rawBind.extra_params;
+  if(rawBind.extended) newBind.extended = rawBind.extended;
+
+  if(typeof rawBind.key === "string") {
+    newBind.key = rawBind.key;
+    if(rawBind.key.match(/KEYMAP([0-9]+)/i)) {
+      var kmId = parseInt(RegExp.$1);
+      newBind.key = "";
+      newBind.keymap = profile.keymaps[kmId-1];
+    }
+  }
+  else {
+    newBind.actions = rawBind.key;
+  }
+
+}
+
+Saver.stringifyProfile = function(profile) {
+  var result = {
+    bindings: [],
+    keymaps: [],
+    options: {}
+  };
+
+  for(var a = 0;a < profile.keymaps.length;a++) {
+    var keymap = profile.keymaps[a];
+    result.keymaps.push({ label: keymap.name });
+    result.bindings.push([]);
+    for(var b = 0;b < keymap.binds.length;b++) {
+      var bind = keymap.binds[b];
+      result.bindings[a].push(this.parseStringifyBind(bind, profile));
+    }
+  }
+
+  result.options.enableDefaults = document.getElementById("profile-enable-defaults").checked;
+
+  return JSON.stringify(result, null, 2);
+}
+
+Saver.parseStringifyBind = function(bind, profile) {
+  var raw = { alt: 0, ctrl: 0, shift: 0, hardware_id: "", rapidfire: 0, toggle: 0, label: "", origin: "", key: "", jra: false };
+  if(bind.alt) raw.alt = 1;
+  if(bind.ctrl) raw.ctrl = 1;
+  if(bind.shift) raw.shift = 1;
+  if(bind.toggle) raw.toggle = 1;
+  raw.rapidfire = bind.rapidfire;
+  raw.hardware_id = bind.hwid;
+  raw.label = bind.label;
+  raw.origin = bind.origin;
+  raw.key = bind.key;
+  raw.jra = bind.jra;
+  if(bind.extraParams.length && bind.extraParams.length > 0) raw.extra_params = bind.extraParams;
+  if(bind.extended) raw.extended = bind.extended;
+
+  if(bind.keymap) {
+    for(var a = 0;a < profile.keymaps.length;a++) {
+      var keymap = profile.keymaps[a];
+      if(bind.keymap === keymap) {
+        raw.key = "keymap" + (a+1).toString();
+      }
+    }
+  }
+  if(bind.isCustom()) {
+    raw.key = bind.actions;
+  }
+
+  return raw;
+}
+
+function Profile() {
+  this.initialize.apply(this, arguments);
+}
+
+Profile.prototype.constructor = Profile;
+
+Profile.prototype.initialize = function() {
+  this.initMembers();
+  document.getElementById("profile-enable-defaults").checked = false;
+}
+
+Profile.prototype.initMembers = function() {
+  this.keymapListElem = document.getElementById("keymap-select");
+  this.bindListElem = document.getElementById("bind-select");
+
+  this.keymaps = [];
+  this.keymapCount = 0;
+  this.bindCount = 0;
+}
+
+Profile.prototype.addKeymap = function(name) {
+  if(name === undefined) name = this.generateKeymapName();
+
+  var newMap = new Keymap(this, name);
+  this.keymaps.push(newMap);
+
+  Core.refresh();
+
+  if(this.keymaps.length === 1) this.keymaps[0].select();
+
+  return newMap;
+}
+
+Profile.prototype.removeKeymap = function(keymap) {
+  for(var a = 0;a < this.keymaps.length;a++) {
+    var km = this.keymaps[a];
+    if(km === keymap) {
+      var nodes = this.keymapListElem.childNodes;
+      for(var b = 0;b < nodes.length;b++) {
+        var node = nodes[b];
+        if(node.value === keymap.id.toString()) {
+          this.keymapListElem.removeChild(node);
+          b--;
+        }
+      }
+      this.keymaps.splice(a, 1);
+      return true;
+    }
+  }
+  return false;
+}
+
+Profile.prototype.generateKeymapName = function() {
+  var a = 1;
+  var name = "Keymap " + a.toString();
+  while(this.keymaps.filter(function(obj) {
+    return (obj.name == name);
+  }).length > 0) {
+    a++;
+    name = "Keymap " + a.toString();
+  }
+
+  return name;
+}
+
+Profile.prototype.getSelectedKeymaps = function() {
+  var nodes = this.keymapListElem.childNodes;
+  var arr = [];
+  for(var a = 0;a < nodes.length;a++) {
+    var node = nodes[a];
+    if(node.selected) {
+      var keymap = this.getKeymapById(parseInt(node.value));
+      if(keymap) arr.push(keymap);
+    }
+  }
+  return arr;
+}
+
+Profile.prototype.getSelectedBinds = function() {
+  var nodes = this.bindListElem.childNodes;
+  var arr = [];
+  $(".bind.ui-selected").each(function(index, elem) {
+    var bind = this.getBindById(parseInt(elem.value));
+    if(bind) arr.push(bind);
+  }.bind(this));
+  return arr;
+}
+
+Profile.prototype.getKeymapById = function(id) {
+  for(var a = 0;a < this.keymaps.length;a++) {
+    var keymap = this.keymaps[a];
+    if(keymap.id === id) {
+      return keymap;
+    }
+  }
+  return null;
+}
+
+Profile.prototype.getBindById = function(id) {
+  for(var a = 0;a < this.keymaps.length;a++) {
+    var keymap = this.keymaps[a];
+    for(var b = 0;b < keymap.binds.length;b++) {
+      var bind = keymap.binds[b];
+      if(bind.id === id) {
+        return bind;
+      }
+    }
+  }
+  return null;
+}
+
+Profile.prototype.selectBind = function(bind) {
+  var elem = document.getElementById("bind-label-edit");
+  elem.disabled = false;
+  elem.value = bind.label;
+
+  var elem = document.getElementById("bind-target");
+  elem.disabled = false;
+  if(bind.keymap) elem.innerHTML = bind.origin + " -> " + bind.keymap.name;
+  else elem.innerHTML = bind.origin + " -> " + bind.key;
+
+  var elem = document.getElementById("bind-toggle");
+  elem.disabled = false;
+  elem.checked = bind.toggle;
+
+  var elem = document.getElementById("bind-jra");
+  elem.disabled = false;
+  elem.checked = bind.jra;
+
+  var elem = document.getElementById("bind-rapidfire");
+  elem.disabled = false;
+  if(bind.rapidfire > 0) elem.value = bind.rapidfire.toString();
+  else elem.value = "";
+
+  var elem = document.getElementById("bind-shift");
+  elem.disabled = false;
+  elem.checked = bind.shift;
+
+  var elem = document.getElementById("bind-ctrl");
+  elem.disabled = false;
+  elem.checked = bind.ctrl;
+
+  var elem = document.getElementById("bind-alt");
+  elem.disabled = false;
+  elem.checked = bind.alt;
+
+  this.selectBindExtraAction(bind);
+}
+
+Profile.prototype.deselectBind = function() {
+  var elem = document.getElementById("bind-label-edit");
+  elem.disabled = true;
+  elem.value = "";
+
+  var elem = document.getElementById("bind-target");
+  elem.disabled = true;
+  elem.innerHTML = "";
+
+  var elem = document.getElementById("bind-toggle");
+  elem.disabled = true;
+  elem.checked = false;
+
+  var elem = document.getElementById("bind-jra");
+  elem.disabled = true;
+  elem.checked = false;
+
+  var elem = document.getElementById("bind-rapidfire");
+  elem.disabled = true;
+  elem.value = "";
+
+  var elem = document.getElementById("bind-shift");
+  elem.disabled = true;
+  elem.checked = false;
+
+  var elem = document.getElementById("bind-ctrl");
+  elem.disabled = true;
+  elem.checked = false;
+
+  var elem = document.getElementById("bind-alt");
+  elem.disabled = true;
+  elem.checked = false;
+
+  Core.clearExtraParamInputs();
+}
+
+Profile.prototype.selectBindExtraAction = function(bind) {
+  if(bind.key.match(/EA:(.+)/i)) {
+    var action = RegExp.$1;
+    var params = action.split(",");
+    action = params[0];
+    params.splice(0, 1);
+    // Load profile
+    if(action.toUpperCase() === "LOADPROFILE") {
+      Core.setExtraParamInputs(bind, [{name: "Category", type: "text", value: bind.extraParams[0]}, {name: "Filename", type: "text", value: bind.extraParams[1]}]);
+    }
+    // Extended action
+    else if(action.toUpperCase() === "EXTENDED") {
+      Core.setExtraParamInputs(bind, [{name: "Edit", type: "button", callback: Core.extendedBindEdit.bind(Core, bind)}]);
+    }
+  }
+}
+
+Profile.prototype.addBind = function() {
+  var keymaps = this.getSelectedKeymaps();
+  if(keymaps.length === 1) {
+    var keymap = keymaps[0];
+    return keymap.addBind();
+  }
+  return null;
+}
+
+function Keymap() {
+  this.initialize.apply(this, arguments);
+}
+
+Keymap.prototype.constructor = Keymap;
+
+Keymap.prototype.initialize = function(parent, name) {
+  this.initMembers();
+  this.setup(parent, name);
+}
+
+Keymap.prototype.initMembers = function() {
+  this.id = 0;
+  this.name = "";
+  this.binds = [];
+  this.parent = null;
+}
+
+Keymap.prototype.setup = function(parent, name) {
+  this.parent = parent;
+  this.name = name;
+  this.id = this.parent.keymapCount;
+  this.parent.keymapCount++;
+}
+
+Keymap.prototype.remove = function() {
+  if(this !== this.parent.keymaps[0]) {
+    var binds = this.parent.keymaps[0].binds;
+    for(var a = 0;a < binds.length;a++) {
+      var bind = binds[a];
+      if(bind.keymap === this) bind.remove();
+    }
+  }
+  if(this.parent) this.parent.removeKeymap(this);
+}
+
+Keymap.prototype.addBind = function() {
+  var newBind = new Bind(this);
+  this.binds.push(newBind);
+
+  return newBind;
+}
+
+Keymap.prototype.removeBind = function(bind) {
+  for(var a = 0;a < this.binds.length;a++) {
+    var testBind = this.binds[a];
+    if(testBind === bind) {
+      var nodes = this.parent.bindListElem.childNodes;
+      for(var b = 0;b < nodes.length;b++) {
+        var node = nodes[b];
+        if(node.value === bind.id.toString()) {
+          this.parent.bindListElem.removeChild(node);
+          b--;
+        }
+      }
+      this.binds.splice(a, 1);
+      return true;
+    }
+  }
+  return false;
+}
+
+Keymap.prototype.select = function() {
+  var nodes = this.parent.keymapListElem.childNodes;
+  for(var a = 0;a < nodes.length;a++) {
+    var node = nodes[a];
+    if(parseInt(node.value) == this.id) {
+      node.selected = true;
+    }
+  }
+  Core.refresh();
+}
+
+Keymap.prototype.deselect = function() {
+  var nodes = this.parent.keymapListElem.childNodes;
+  for(var a = 0;a < nodes.length;a++) {
+    var node = nodes[a];
+    if(parseInt(node.value) == this.id) {
+      node.selected = false;
+    }
+  }
+  Core.refresh();
+}
+
+Keymap.prototype.getBind = function(origin, hwid) {
+  for(var a = 0;a < this.binds.length;a++) {
+    var bind = this.binds[a];
+  }
+}
+
+function Bind() {
+  this.initialize.apply(this, arguments);
+}
+
+Bind.prototype.constructor = Bind;
+
+Bind.prototype.initialize = function(parent) {
+  this.initMembers();
+  this.parent = parent;
+  this.id = this.parent.parent.bindCount;
+  this.parent.parent.bindCount++;
+}
+
+Bind.prototype.initMembers = function() {
+  this.alt = false;
+  this.ctrl = false;
+  this.shift = false;
+  this.key = "";
+  this.origin = "";
+  this.rapidfire = 0;
+  this.toggle = false;
+  this.jra = false;
+  this.label = "";
+  this.hwid = "";
+  this.keymap = null;
+  this.actions = { press: [], release: [] };
+  this.extraParams = [];
+
+  this.parent = null;
+}
+
+Bind.prototype.remove = function() {
+  if(this.parent) this.parent.removeBind(this);
+}
+
+Bind.prototype.name = function() {
+  if(this.keymap) return this.origin + " -> " + this.keymap.name + (this.label !== "" ? " (" + this.label + ")" : "");
+  return this.origin + " -> " + this.key + (this.label !== "" ? " (" + this.label + ")" : "");
+}
+
+Bind.prototype.nameLimited = function() {
+  var name = this.name();
+  if(name.length > Core.maxBindNameLength()) {
+    name = name.slice(0, Core.maxBindNameLength() - 3) + "...";
+  }
+  return name;
+}
+
+Bind.prototype.refresh = function() {
+  // Remove old bind with same origin and hwid in same keymap
+  for(var a = 0;a < this.parent.binds.length;a++) {
+    var bind = this.parent.binds[a];
+    if(bind !== this && bind.origin === this.origin && bind.hwid === this.hwid) {
+      document.getElementById("bind-select").removeChild(bind.elem);
+      bind.remove();
+      a--;
+    }
+  }
+}
+
+Bind.prototype.isCustom = function() {
+  return (this.actions.press.length > 0 || this.actions.release.length > 0);
+}
+
+function Button_Layout() {
+  this.initialize.apply(this, arguments);
+}
+
+Button_Layout.prototype.constructor = Button_Layout;
+
+Button_Layout.prototype.initialize = function(conf, hwid) {
+  this.initMembers();
+  this.setup(conf, hwid);
+}
+
+Button_Layout.prototype.initMembers = function() {
+  this.buttons = [];
+}
+
+Button_Layout.prototype.setup = function(conf, hwid) {
+  for(var a = 0;a < conf.length;a++) {
+    var btn = conf[a];
+    this.addButton(btn, hwid);
+  }
+}
+
+Button_Layout.prototype.show = function() {
+  this.buttons.forEach(function(btn) {
+    btn.show();
+  });
+}
+
+Button_Layout.prototype.hide = function() {
+  this.buttons.forEach(function(btn) {
+    btn.hide();
+  });
+}
+
+Button_Layout.prototype.addButton = function(src, hwid) {
+  var btn = new Button(this, src, hwid);
+  this.buttons.push(btn);
+  return btn;
+}
+
+function Button() {
+  this.initialize.apply(this, arguments);
+}
+
+Button.prototype.constructor = Button;
+
+Button.prototype.initialize = function(parent, conf, hwid) {
+  this.initMembers();
+  this.parent = parent;
+  this.setup(conf, hwid);
+}
+
+Button.prototype.initMembers = function() {
+  this.label = "";
+  this.keycode = "";
+  this.x = 0;
+  this.y = 0;
+  this.width = 20;
+  this.height = 20;
+  this.hardware_id = "";
+}
+
+Button.prototype.setup = function(conf, hwid) {
+  this.label = conf.label;
+  this.keycode = conf.keycode;
+  this.x = conf.x;
+  this.y = conf.y;
+  this.width = conf.width;
+  this.height = conf.height;
+  this.hardware_id = hwid;
+
+  this.elem = document.createElement("button");
+  this.elem.style.position = "absolute";
+  this.elem.style.left = this.x;
+  this.elem.style.top = this.y;
+  this.elem.style.width = this.width;
+  this.elem.style.height = this.height;
+  this.elem.innerHTML = this.label;
+  this.elem.addEventListener("mousedown", this.onClick.bind(this));
+  document.getElementById("group_buttons").appendChild(this.elem);
+}
+
+Button.prototype.show = function() {
+  this.elem.style.display = "initial";
+}
+
+Button.prototype.hide = function() {
+  this.elem.style.display = "none";
+}
+
+Button.prototype.onClick = function() {
+  if(!Core.dialogOpen) {
+    if(Core.waitForInput.active) {
+      var keymaps = Core.profile.getSelectedKeymaps();
+      if(keymaps.length === 1) {
+        var keymap = keymaps[0];
+        var bind = keymap.addBind();
+        bind.key = this.keycode.toLowerCase();
+        bind.origin = Core.waitForInput.keycode.toLowerCase();
+        bind.hwid = Core.waitForInput.hwid;
+        bind.refresh();
+        Core.createBindElement(bind);
+      }
+      Core.waitForInput.setActive(false);
+      Core.refresh();
+    }
+    else {
+      Core.waitForInput.setActive(true);
+      Core.waitForInput.keycode = this.keycode;
+      Core.waitForInput.hwid = this.hardware_id;
+      Core.waitForInput.keymap = Core.profile.getSelectedKeymaps()[0];
+    }
+  }
+}
+
