@@ -2046,5 +2046,214 @@
 			"height": 20,
 			"hardware_id": "any"
 		}
+	],
+	"nostromo": [
+		{
+			"label": "<",
+			"keycode": "left",
+			"x": 190,
+			"y": 350,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": "v",
+			"keycode": "down",
+			"x": 220,
+			"y": 350,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": ">",
+			"keycode": "right",
+			"x": 250,
+			"y": 350,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": "^",
+			"keycode": "up",
+			"x": 220,
+			"y": 320,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": "Esc",
+			"keycode": "escape",
+			"x": 280,
+			"y": 350,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": "ScrLck",
+			"keycode": "scrolllock",
+			"x": 280,
+			"y": 320,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": "A",
+			"keycode": "A",
+			"x": 20,
+			"y": 320,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": "S",
+			"keycode": "S",
+			"x": 50,
+			"y": 320,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": "D",
+			"keycode": "D",
+			"x": 80,
+			"y": 320,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": "F",
+			"keycode": "F",
+			"x": 110,
+			"y": 320,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": "Q",
+			"keycode": "Q",
+			"x": 20,
+			"y": 290,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": "W",
+			"keycode": "W",
+			"x": 50,
+			"y": 290,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": "E",
+			"keycode": "E",
+			"x": 80,
+			"y": 290,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": "R",
+			"keycode": "R",
+			"x": 110,
+			"y": 290,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": "T",
+			"keycode": "T",
+			"x": 140,
+			"y": 290,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": "1",
+			"keycode": "1",
+			"x": 20,
+			"y": 260,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": "2",
+			"keycode": "2",
+			"x": 50,
+			"y": 260,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": "3",
+			"keycode": "3",
+			"x": 80,
+			"y": 260,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": "4",
+			"keycode": "4",
+			"x": 110,
+			"y": 260,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": "5",
+			"keycode": "5",
+			"x": 140,
+			"y": 260,
+			"width": 20,
+			"height": 20,
+			"hardware_id": "any"
+		},
+		{
+			"label": "S ^",
+			"keycode": "numpad8",
+			"x": 140,
+			"y": 320,
+			"width": 40,
+			"height": 14,
+			"hardware_id": "any"
+		},
+		{
+			"label": "S .",
+			"keycode": "numpad5",
+			"x": 140,
+			"y": 340,
+			"width": 40,
+			"height": 14,
+			"hardware_id": "any"
+		},
+		{
+			"label": "S v",
+			"keycode": "numpad2",
+			"x": 140,
+			"y": 360,
+			"width": 40,
+			"height": 14,
+			"hardware_id": "any"
+		}
 	]
 }
