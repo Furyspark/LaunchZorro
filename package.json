@@ -2,7 +2,7 @@
   "main": "main.js",
   "name": "zorro",
   "private": true,
-  "version": "0.3.4",
+  "version": "0.3.6",
   "description": "An input profiler based on Interception",
   "author": {
     "name": "Tijmen Bok",
@@ -28,7 +28,7 @@
   },
   "build": {
     "appId": "com.zorro.app",
-    "electronVersion": "1.7.9",
+    "electronVersion": "1.8.4",
     "asar": false,
     "asarUnpack": [
       "devices.json",
