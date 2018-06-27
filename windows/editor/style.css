@@ -35,7 +35,6 @@ button:focus {
 button:hover {
   background: #9fafcf;
   color: #4e5666;
-  border-radius: 0.8em;
 }
 
 .bind {
