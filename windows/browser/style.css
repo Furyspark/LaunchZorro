@@ -1,15 +1,21 @@
 body {
   background: #21252b;
+  margin: 0.4em;
   padding: 0;
-  /*display: inline-block;*/
+}
+
+.gap {
+  width: 0.4em;
+  height: 0.4em;
+  display: inline-block;
+  box-sizing: border-box;
 }
 
 .group {
   display: inline-block;
   position: relative;
   vertical-align: top;
-  padding: 0.4em;
-  margin: 0.4em;
+  padding: 0.6em;
   border: 1px solid #181a1f;
   border-radius: 0.5em;
   background: #282c34;
@@ -135,7 +141,7 @@ button:hover {
 .group_option {
   border: 2px solid transparent;
   border-radius: 0.5em;
-  width: 224px;
+  width: 288px;
   height: 32px;
   cursor: hand;
 }
@@ -169,7 +175,7 @@ button:hover {
 }*/
 
 .item_group {
-  width:256px;
-  height:320px;
+  width:320px;
+  height:480px;
   overflow-y:scroll;
 }
