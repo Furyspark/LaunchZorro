@@ -696,15 +696,15 @@ Core.handleInterception = function(keyCode, keyDown, keyE0, hwid, deviceType, mo
     overridden = this._superGlobalProfile.isOverriding(keyName, hwid);
     this._superGlobalProfile.handleInterception(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y);
   }
-  if(!overridden && !!this._globalProfile && this._globalProfile.shouldHandle(keyName, hwid, deviceType, {})) {
-    sendDefault = false;
-    overridden = this._globalProfile.isOverriding(keyName, hwid);
-    this._globalProfile.handleInterception(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y);
-  }
   if(!overridden && !!prof && prof.shouldHandle(keyName, hwid, deviceType, {})) {
     sendDefault = false;
     overridden = prof.isOverriding(keyName, hwid);
     prof.handleInterception(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y);
+  }
+  if(!overridden && !!this._globalProfile && this._globalProfile.shouldHandle(keyName, hwid, deviceType, {})) {
+    sendDefault = false;
+    overridden = this._globalProfile.isOverriding(keyName, hwid);
+    this._globalProfile.handleInterception(keyCode, keyDown, keyE0, hwid, keyName, deviceType, mouseWheel, mouseMove, x, y);
   }
   if(sendDefault) {
     this.handler.send_default();
