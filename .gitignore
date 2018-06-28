@@ -2,7 +2,6 @@ LaunchZorro*/
 bin
 node_modules
 .atom-build.json
-./app.js
 conf.json
 *.sublime-*
 core-config.json
@@ -14,3 +13,4 @@ dist
 .vimrc
 interception.tlog
 **/interception.tlog/**
+/windows/*/app.js
