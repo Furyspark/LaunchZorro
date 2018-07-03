@@ -2,7 +2,7 @@
   "main": "main.js",
   "name": "zorro",
   "private": true,
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "An input profiler based on Interception",
   "author": {
     "name": "Tijmen Bok",
