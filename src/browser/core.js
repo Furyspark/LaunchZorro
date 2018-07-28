@@ -40,7 +40,7 @@ Core.start = function() {
   // Load configs
   this.devices.list = JSON.parse(fs.readFileSync(Core.baseData.rootDir + "/devices.json"))
   // Initialize modules
-  interceptionJS = require(this.baseData.rootDir + "/interception/interception.node");
+  interceptionJS = require(this.baseData.rootDir + "/interception/interception");
 
   // Set important variables
   this._closing = false;
@@ -90,7 +90,7 @@ Core.start = function() {
   Audio.addSound("activate_profile", this.baseData.rootDir + "/assets/audio/activate_profile.wav");
   Audio.addSound("deactivate_profile", this.baseData.rootDir + "/assets/audio/deactivate_profile.wav");
 
-  Core.handler = new interceptionJS();
+  Core.handler = interceptionJS();
   Core.handler.start(Core.handleInterception.bind(Core));
   Core.loadWhitelist();
 
