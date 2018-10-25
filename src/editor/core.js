@@ -3,49 +3,57 @@ function Core() {}
 Core.baseData = null;
 
 Core.start = function() {
-  require(this.baseData.rootDir + "/lib/jquery-ui.js");
-  this.profile = null;
-  this.dialogOpen = false;
-  this.profileLocation = "";
-  this.buttonLayouts = {};
-  this.waitForInput = {
-    active: false,
-    keycode: "",
-    hwid: "",
-    keymap: null,
-    awaitingExtended: false,
-    params: [],
-    setActive: function(value, msg, params) {
-      this.active = value;
-      if(this.active) {
-        this.active = true;
-        if(msg) Core.buttonInfoElem.innerHTML = msg;
-        else Core.buttonInfoElem.innerHTML = "Awaiting input...";
-        if(params) this.params = params;
+  // Initialize submodules
+  KeyCodeTranslator.initialize();
+
+  // Start
+  this.lowerPrivileges()
+  .catch((err) => { console.error(err); })
+  .then(() => {
+    require(this.dirs.appRoot + "/lib/jquery-ui.js");
+    this.profile = null;
+    this.dialogOpen = false;
+    this.profileLocation = "";
+    this.buttonLayouts = {};
+    this.waitForInput = {
+      active: false,
+      keycode: "",
+      hwid: "",
+      keymap: null,
+      awaitingExtended: false,
+      params: [],
+      setActive: function(value, msg, params) {
+        this.active = value;
+        if(this.active) {
+          this.active = true;
+          if(msg) Core.buttonInfoElem.innerHTML = msg;
+          else Core.buttonInfoElem.innerHTML = "Awaiting input...";
+          if(params) this.params = params;
+        }
+        else {
+          this.keycode = "";
+          this.active = false;
+          this.hwid = "";
+          this.keymap = null;
+          this.awaitingExtended = false;
+          this.params = [];
+          Core.buttonInfoElem.innerHTML = "";
+        }
       }
-      else {
-        this.keycode = "";
-        this.active = false;
-        this.hwid = "";
-        this.keymap = null;
-        this.awaitingExtended = false;
-        this.params = [];
-        Core.buttonInfoElem.innerHTML = "";
-      }
-    }
-  };
-  this.buttonInfoElem = document.getElementById("button-info");
-  this.coreMessageElem = document.getElementById("core-message");
-  this.coreMessageTimeout = null;
-  this.extraParamInputs = [];
-  this._closing = false;
+    };
+    this.buttonInfoElem = document.getElementById("button-info");
+    this.coreMessageElem = document.getElementById("core-message");
+    this.coreMessageTimeout = null;
+    this.extraParamInputs = [];
+    this._closing = false;
 
-  this.createNewProfile();
-  this.loadButtons();
+    this.createNewProfile();
+    this.loadButtons();
 
-  this.initJQueryUI();
+    this.initJQueryUI();
 
-  window.addEventListener("keyup", this.keyUp.bind(this));
+    window.addEventListener("keyup", this.keyUp.bind(this));
+  });
 }
 
 Core.maxBindNameLength = function() {
@@ -95,6 +103,7 @@ Core.createNewProfile = function() {
 }
 
 Core.buttonLoad = function() {
+  console.log(this.dirs.appData + "/profiles");
   if(!this.dialogOpen) {
     this.dialogOpen = true;
     dialog.showOpenDialog({
@@ -103,7 +112,7 @@ Core.buttonLoad = function() {
         { name: "Profiles", extensions: ["json"] }
       ],
       properties: ["openFile", "createDirectory"],
-      defaultPath: this.baseData.baseDir + "/profiles"
+      defaultPath: this.dirs.appData + "/profiles"
     }, function(filenames) {
       if(filenames && filenames.length > 0) Core.loadProfile(filenames[0]);
       else Core.cancelDialog();
@@ -130,7 +139,7 @@ Core.buttonSaveAs = function() {
       filters: [
         { name: "Profiles", extensions: ["json"] }
       ],
-      defaultPath: this.baseData.baseDir + "/profiles"
+      defaultPath: this.dirs.appData + "/profiles"
     }, function(filename) {
       if(filename) Core.saveProfile(filename);
       else Core.cancelDialog();
@@ -297,7 +306,7 @@ Core.createBindElement = function(bind) {
 }
 
 Core.getBindImageSrc = function(bind) {
-  return Core.baseData.baseDir + "/icons/devices/" + bind.hwid + ".png";
+  return Core.dirs.appData + "/icons/devices/" + bind.hwid + ".png";
 }
 
 Core.bindListElement = function() {
@@ -676,6 +685,35 @@ Core.extendedBindEdit = function(bind) {
   }
 }
 
+Core.lowerPrivileges = function() {
+  return new Promise((resolve, reject) => {
+    if(os.platform() === "win32") {
+      resolve();
+      return;
+    }
+    else {
+      fs.readFile(this.dirs.electronRoot + "/user.json", (err, data) => {
+        if(err) {
+          reject(err);
+        }
+        else {
+          let user = JSON.parse(data.toString());
+          try {
+            process.setgid(user.group);
+            process.setuid(user.name);
+            console.log("Successfully dropped privileges");
+            resolve();
+          }
+          catch(err) {
+            console.error("Couldn't drop privileges! Be very careful!");
+            reject();
+          }
+        }
+      });
+    }
+  });
+};
+
 
 //-------------------------------------------------------------------
 // Events
@@ -691,6 +729,7 @@ ipcRenderer.on("core", function(event, args) {
         break;
       case "BASEDATA":
         Core.baseData = args[0];
+        Core.dirs = Core.baseData.dirs;
         Core.start();
         break;
     }

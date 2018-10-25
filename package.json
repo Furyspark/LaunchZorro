@@ -2,65 +2,33 @@
   "main": "main.js",
   "name": "zorro",
   "private": true,
-  "version": "0.3.9",
+  "version": "0.4.0",
   "description": "An input profiler based on Interception",
   "author": {
     "name": "Tijmen Bok",
     "email": "mikauschekzen@gmail.com"
   },
   "scripts": {
-    "test": "gulp && electron . --debug",
+    "test": "gulp && sudo electron . --debug",
+    "test-normal": "gulp && electron . --debug",
     "test-cmd": "node compile.js && electron . --debug --mouse=normal --lhc=normal --category=\"MMO\" --profile=\"World of Warcraft\"",
-    "dist": "node compile.js"
+    "dist": "node compile.js",
+    "start": "electron ."
   },
   "devDependencies": {
     "concatenate-files": "^0.1.1",
+    "electron": "^3.0.5",
     "electron-builder": "^19.43.0",
     "electron-packager": "^9.1.0",
     "gulp": "^3.9.1",
-    "gulp-concat": "^2.6.1"
+    "gulp-concat": "^2.6.1",
+    "native": "^0.3.3"
   },
   "dependencies": {
     "jquery": "^3.2.1",
     "jquery-ui": "github:jquery/jquery-ui",
+    "natives": "^1.1.6",
     "ncp": "^2.0.0",
     "socket.io": "^1.7.2"
-  },
-  "build": {
-    "appId": "com.zorro.app",
-    "electronVersion": "1.8.4",
-    "asar": false,
-    "asarUnpack": [
-      "devices.json",
-      "assets",
-      "interception_driver",
-      "interception"
-    ],
-    "files": {
-      "filter": [
-        "**/*",
-        "package.json",
-        "main.js",
-        "!profiles",
-        "!icons",
-        "!**/*.sublime-*",
-        "!**/*.bak",
-        "!**/*.log",
-        "!**/*.lock"
-      ]
-    },
-    "win": {
-      "target": [
-        {
-          "target": "dir",
-          "arch": [
-            "x64"
-          ]
-        }
-      ]
-    },
-    "directories": {
-      "output": "dist/"
-    }
   }
 }

@@ -37,65 +37,99 @@ Core.baseData = null;
 
 
 Core.start = function() {
-  // Load configs
-  this.devices.list = JSON.parse(fs.readFileSync(Core.baseData.rootDir + "/devices.json"))
-  // Initialize modules
-  interceptionJS = require(this.baseData.rootDir + "/interception/interception");
-
   // Set important variables
   this._closing = false;
-  // Add Left-Handed Controllers to the list of devices
-  if(processType !== "node") {
-    var groups = ["lhc", "mice"];
-    for(var a = 0;a < groups.length;a++) {
-      var groupName = groups[a];
-      var group = Core.devices.list[groupName];
-      for(var b = 0;b < group.length;b++) {
-        var device = group[b];
 
-        // Create element
-        var elem = Core.addRadioButton("group_" + groupName, device.dirName, groupName, device.name);
-        // Add click event
-        if(groupName === "lhc") {
-          elem.onchange = function() {
-            Core.onLHCSelect();
-          };
-        } else if(groupName === "mice") {
-          elem.onchange = function() {
-            Core.onMouseSelect();
-          };
-        }
+  // Initialize submodules
+  KeyCodeTranslator.initialize();
 
-        // Set default check
-        elem.firstChild.checked = false;
-        if(b === 0) {
-          elem.firstChild.checked = true;
-        }
-
-        // Append to list
-        var obj = {
-          name: device.name,
-          dirName: device.dirName,
-          element: elem
-        };
-        Core.devices[groupName][device.dirName] = obj;
-      }
-    }
+  // Initialize modules
+  let handlerName = this.getHandlerName();
+  if(handlerName === "interception") {
+    interceptionJS = require(this.dirs.appRoot + "/interception/interception");
+  }
+  else {
+    grabzorro = require(this.dirs.appRoot + "/grabzorro/grabzorro");
   }
 
+  if(os.platform() === "win32") {
+    Core.handler = interceptionJS();
+    Core.handler.start(Core.handleInterception.bind(Core));
+  }
+  else {
+    Core.handler = grabzorro;
+    Core.handler.start(Core.handleGrabZorro.bind(Core));
+  }
+
+  this.sendLowerPrivileges();
+  this.lowerPrivileges()
+  .catch((err) => { console.error(err); })
+  .then(() => {
+    this.postStart();
+  });
+};
+
+Core.postStart = function() {
+  // Load configs
+  fs.readFile(Core.dirs.appRoot + "/devices.json", (err, data) => {
+    if(err) {
+      console.error(err);
+    }
+    else {
+      this.devices.list = JSON.parse(data.toString());
+
+      // Add Left-Handed Controllers to the list of devices
+      if(processType !== "node") {
+        var groups = ["lhc", "mice"];
+        for(var a = 0;a < groups.length;a++) {
+          var groupName = groups[a];
+          var group = Core.devices.list[groupName];
+          for(var b = 0;b < group.length;b++) {
+            var device = group[b];
+
+            // Create element
+            var elem = Core.addRadioButton("group_" + groupName, device.dirName, groupName, device.name);
+            // Add click event
+            if(groupName === "lhc") {
+              elem.onchange = function() {
+                Core.onLHCSelect();
+              };
+            } else if(groupName === "mice") {
+              elem.onchange = function() {
+                Core.onMouseSelect();
+              };
+            }
+
+            // Set default check
+            elem.firstChild.checked = false;
+            if(b === 0) {
+              elem.firstChild.checked = true;
+            }
+
+            // Append to list
+            var obj = {
+              name: device.name,
+              dirName: device.dirName,
+              element: elem
+            };
+            Core.devices[groupName][device.dirName] = obj;
+          }
+        }
+      }
+
+      Core.loadWhitelist();
+
+      Core.loadConfig();
+      Categories.refresh();
+    }
+  });
+
   // Load sounds
-  Audio.addSound("reload", this.baseData.rootDir + "/assets/audio/profiler_reload.wav");
-  Audio.addSound("unload", this.baseData.rootDir + "/assets/audio/profiler_unload.wav");
-  Audio.addSound("refresh", this.baseData.rootDir + "/assets/audio/profiler_refresh.wav");
-  Audio.addSound("activate_profile", this.baseData.rootDir + "/assets/audio/activate_profile.wav");
-  Audio.addSound("deactivate_profile", this.baseData.rootDir + "/assets/audio/deactivate_profile.wav");
-
-  Core.handler = interceptionJS();
-  Core.handler.start(Core.handleInterception.bind(Core));
-  Core.loadWhitelist();
-
-  Core.loadConfig();
-  Categories.refresh();
+  Audio.addSound("reload", this.dirs.appRoot + "/assets/audio/profiler_reload.wav");
+  Audio.addSound("unload", this.dirs.appRoot + "/assets/audio/profiler_unload.wav");
+  Audio.addSound("refresh", this.dirs.appRoot + "/assets/audio/profiler_refresh.wav");
+  Audio.addSound("activate_profile", this.dirs.appRoot + "/assets/audio/activate_profile.wav");
+  Audio.addSound("deactivate_profile", this.dirs.appRoot + "/assets/audio/deactivate_profile.wav");
 
   // Core.setPriority();
 };
@@ -104,20 +138,27 @@ Core.loadConfig = function() {
   let appDir = process.argv[0].split(/[\\\/]/).slice(0, -1).join("/");
   Core.createBaseDirectories()
   .then(() => {
-    Core.createSymlink(Core.baseData.baseDir + "/profiles", appDir + "/profiles");
+    if(os.platform() !== "win32") {
+      Core.createSymlink(Core.dirs.electronRoot + "/profiles", Core.dirs.appData + "/profiles")
+      .then(() => {
+        Core.createSymlink(Core.dirs.electronRoot + "/icons", Core.dirs.appData + "/icons");
+      })
+      .catch(err => {
+        console.error(err);
+      });
+    }
   })
   .then(() => {
-    Core.createSymlink(Core.baseData.baseDir + "/icons", appDir + "/icons");
   })
   .catch(err => {
-    console.log(err);
+    console.error(err);
   });
 
   Core.loadRecentProfiles();
   Core.conf = Core.generateConfig();
-  Core.fileExists(Core.baseData.baseDir + "/conf.json", function(result) {
+  Core.fileExists(Core.dirs.electronRoot + "/conf.json", function(result) {
     if(result) {
-      fs.readFile(Core.baseData.baseDir + "/conf.json", function(err, data) {
+      fs.readFile(Core.dirs.electronRoot + "/conf.json", function(err, data) {
         Core.conf = JSON.parse(data.toString());
         Core.onConfLoaded();
       });
@@ -128,7 +169,7 @@ Core.loadConfig = function() {
 }
 
 Core.saveConfig = function() {
-  fs.writeFile(this.baseData.baseDir + "/conf.json", JSON.stringify(this.conf, null, 2), function(err) {} );
+  fs.writeFile(this.dirs.electronRoot + "/conf.json", JSON.stringify(this.conf, null, 2), function(err) {} );
 }
 
 Core.fileExists = function(path, callback) {
@@ -156,19 +197,19 @@ Core.createBaseDirectories = function() {
     for(let a in Core.devices.lhc) { lhcDirs.push(a); }
     let dirsToCreate = [];
     // Create profiles directories
-    fs.mkdir(Core.baseData.baseDir + "/profiles", function(err) {
+    fs.mkdir(Core.dirs.appData + "/profiles", function(err) {
       if(err && err.code !== "EEXIST") reject(err);
       // Create mice directories
       for(let a = 0;a < miceDirs.length;a++) {
         let md = miceDirs[a];
-        fs.mkdir(Core.baseData.baseDir + "/profiles/" + md, function(err2) {
+        fs.mkdir(Core.dirs.appData + "/profiles/" + md, function(err2) {
           if(err && err.code !== "EEXIST") reject(err);
           // Create lhc directories
           for(let b = 0;b < lhcDirs.length;b++) {
             let ld = lhcDirs[b];
             let key = md + "/" + ld;
             dirsToCreate.push(key);
-            fs.mkdir(Core.baseData.baseDir + "/profiles/" + md + "/" + ld, function(err3) {
+            fs.mkdir(Core.dirs.appData + "/profiles/" + md + "/" + ld, function(err3) {
               if(err3 && err3.code !== "EEXIST") reject(err);
               let keyIndex = dirsToCreate.indexOf(key);
               if(keyIndex >= 0) {
@@ -254,7 +295,7 @@ Core.sendRecentProfilesToMain = function() {
 
 Core.loadGlobalProfiles = function() {
   // Load super global profile
-  var superGlobalProfilePath = this.baseData.baseDir + "/profiles/global.json";
+  var superGlobalProfilePath = this.dirs.appData + "/profiles/global.json";
   this.fileExists(superGlobalProfilePath, function(result) {
     this._superGlobalProfile = null;
     if(result) this._superGlobalProfile = new Profile(superGlobalProfilePath);
@@ -262,7 +303,7 @@ Core.loadGlobalProfiles = function() {
   // Load global profile
   var mouseDir = this.devices.mice[this.MouseElement().value].dirName;
   var lhcDir = this.devices.lhc[this.LHCElement().value].dirName;
-  var globalProfilePath = this.baseData.baseDir + "/profiles/" + mouseDir + "/" + lhcDir + "/global.json";
+  var globalProfilePath = this.dirs.appData + "/profiles/" + mouseDir + "/" + lhcDir + "/global.json";
   this.fileExists(globalProfilePath, function(result) {
     this._globalProfile = null;
     if(result) this._globalProfile = new Profile(globalProfilePath);
@@ -270,9 +311,9 @@ Core.loadGlobalProfiles = function() {
 }
 
 Core.loadRecentProfiles = function() {
-  fs.readFile(this.baseData.baseDir + "/recent.json", function(err, data) {
+  fs.readFile(this.dirs.appData + "/recent.json", function(err, data) {
     if(err) {
-      console.log(err);
+      if(err.code !== "ENOENT") console.error(err);
       return;
     }
     this._recentProfiles = JSON.parse(data);
@@ -281,7 +322,9 @@ Core.loadRecentProfiles = function() {
 }
 
 Core.saveRecentProfiles = function() {
-  fs.writeFile(this.baseData.baseDir + "/recent.json", JSON.stringify(this._recentProfiles));
+  fs.writeFile(this.dirs.appData + "/recent.json", JSON.stringify(this._recentProfiles), (err) => {
+    console.error(err);
+  });
 }
 
 Core.onConfLoaded = function() {
@@ -314,9 +357,6 @@ Core.onConfLoaded = function() {
       Profiles.clear();
       Categories.refresh();
     }
-  }
-  else {
-
   }
   Core.loadGlobalProfiles();
 
@@ -434,6 +474,60 @@ Core.detectRunning = function() {
   });
 }
 
+Core.handleGrabZorro = function(ev, code, value, info) {
+  let hwid = info.idVendor + ":" + info.idProduct;
+  let sendDefault = true;
+  if(ev === EvDevDict.events.key) {
+    let keyDown = (value == EvDevDict.values.key.pressed);
+    let keyName = KeyCodeTranslator.fromLinux(code);
+    let deviceType = EvDevDict.isMouseButton(code) ? Core.DEVICE_TYPE_MOUSE : Core.DEVICE_TYPE_KEYBOARD;
+    let prof = Profiles.profile;
+    let overriden = false;
+
+    // Wait for whitelist
+    if(this._waitForWhitelistKey) {
+      sendDefault = false;
+      this._waitForWhitelistKey = false;
+      this.addToWhitelist(null, this.getHandlerName(), hwid);
+      this.onSelectWhitelistDevice();
+      this.saveWhitelist();
+      this.clearCoreMessage();
+    }
+    // Suspend profile
+    else if(prof != null && keyName === this.conf.suspend_key) {
+      sendDefault = false;
+      if(keyDown) {
+        prof.toggleSuspend();
+      }
+    }
+
+    if(!overriden && prof != null && prof.shouldHandle(keyName, hwid, deviceType, {})) {
+      sendDefault = false;
+      overriden = prof.isOverriding(keyName, hwid);
+      prof.handleGrabZorro(keyName, value, info, hwid);
+    }
+    if(!overriden && this._globalProfile != null && this._globalProfile.shouldHandle(keyName, hwid, deviceType, {})) {
+      sendDefault = false;
+      overriden = prof.isOverriding(keyName, hwid);
+      this._globalProfile.handleGrabZorro(keyName, value, info, hwid);
+    }
+    if(!overriden && this._superGlobalProfile != null && this._superGlobalProfile.shouldHandle(keyName, hwid, deviceType, {})) {
+      sendDefault = false;
+      overriden = prof.isOverriding(keyName, hwid);
+      this._superGlobalProfile.handleGrabZorro(keyName, value, info, hwid);
+    }
+  }
+
+  // Send default stuff
+  if(sendDefault) {
+    // Quick and dirty personal workaround for capslock
+    if(code === EvDevDict.codes.key.key_capslock) {
+      code = EvDevDict.codes.key.key_f14;
+    }
+    Core.handler.send(ev, code, value);
+  }
+};
+
 Core.handleInterception = function(keyCode, keyDown, keyE0, hwid, deviceType, mouseWheel, mouseMove, x, y) {
   var keyName = "";
   if(deviceType === Core.DEVICE_TYPE_KEYBOARD) keyName = Input.indexToString(keyCode, keyE0);
@@ -449,7 +543,7 @@ Core.handleInterception = function(keyCode, keyDown, keyE0, hwid, deviceType, mo
   if(this._waitForWhitelistKey && keyCode > 0) {
     sendDefault = false;
     this._waitForWhitelistKey = false;
-    this.addToWhitelist(null, hwid);
+    this.addToWhitelist(null, this.getHandlerName(), hwid);
     this.onSelectWhitelistDevice();
     this.saveWhitelist();
     this.clearCoreMessage();
@@ -544,21 +638,25 @@ Core.buttonWhitelist = function() {
 }
 
 Core.buttonWhitelistRemove = function() {
-  var device = $("#group-whitelist").val();
-  if(!this._whitelist[device]) return;
-  var hwid = $("#group-whitelist-hwids").val();
-  var index = this._whitelist[device].indexOf(hwid);
+  let device = $("#group-whitelist").val();
+  if(!this._whitelist[device])
+    return;
+  let hwid = $("#group-whitelist-hwids").val();
+  let handlerName = this.getHandlerName();
+  if(this._whitelist[device][handlerName] == null)
+    return;
+  var index = this._whitelist[device][handlerName].indexOf(hwid);
   if(index === -1) return;
-  this._whitelist[device].splice(index, 1);
+  this._whitelist[device][handlerName].splice(index, 1);
   $("#group-whitelist-hwids option:selected").remove();
   this.saveWhitelist();
 }
 
 Core.loadWhitelist = function() {
   this._whitelist = null;
-  fs.readFile(this.baseData.baseDir + "/whitelist.json", function(err, data) {
+  fs.readFile(this.dirs.appData + "/whitelist.json", function(err, data) {
     if(err) {
-      if(err.code !== "ENOENT") console.log(err);
+      if(err.code !== "ENOENT") console.error(err);
       this._whitelist = { lhc: [], mice: [] };
     }
     else {
@@ -586,16 +684,21 @@ Core.loadWhitelist = function() {
 }
 
 Core.saveWhitelist = function() {
-  fs.writeFile(this.baseData.baseDir + "/whitelist.json", JSON.stringify(this._whitelist, null, 2));
+  fs.writeFile(this.dirs.appData + "/whitelist.json", JSON.stringify(this._whitelist, null, 2), (err) => {
+    if(err) console.error(err);
+  });
 }
 
-Core.addToWhitelist = function(device, hwid) {
+Core.addToWhitelist = function(device, handler, hwid) {
   if(!device) device = this.getWhitelistDeviceElem().value;
   if(!this._whitelist) return;
-  if(!this._whitelist[device]) this._whitelist[device] = [];
-  var index = this._whitelist[device].indexOf(hwid);
-  if(index === -1) this._whitelist[device].push(hwid);
-  this.saveWhitelist();
+  if(!this._whitelist[device]) this._whitelist[device] = {};
+  if(!this._whitelist[device][handler]) this._whitelist[device][handler] = [];
+  var index = this._whitelist[device][handler].indexOf(hwid);
+  if(index === -1) {
+    this._whitelist[device][handler].push(hwid);
+    this.saveWhitelist();
+  }
 }
 
 Core.addWhitelistDeviceToGroup = function(name) {
@@ -615,16 +718,18 @@ Core.getWhitelistDeviceElem = function() {
 }
 
 Core.onSelectWhitelistDevice = function() {
-  var elem = this.getWhitelistDeviceElem();
-  if(elem) this.setWhitelistHwidList(elem.value);
+  let elem = this.getWhitelistDeviceElem();
+  let handler = this.getHandlerName();
+  if(elem) this.setWhitelistHwidList(elem.value, handler);
 }
 
-Core.setWhitelistHwidList = function(device) {
+Core.setWhitelistHwidList = function(device, handler) {
   var group = document.getElementById("group-whitelist-hwids");
-  var hwidList = this._whitelist[device];
+  var hwidList = this._whitelist[device][handler] || null;
   while(group.firstChild) {
     group.removeChild(group.firstChild);
   }
+  if(hwidList === null) return;
   for(var a = 0;a < hwidList.length;a++) {
     var hwid = hwidList[a];
     var elem = document.createElement("option");
@@ -639,6 +744,45 @@ Core.onBlockCLIChange = function() {
   this.conf.blockCLISwitching = elem.checked;
   this.saveConfig();
 }
+
+Core.getHandlerName = function() {
+  if(os.platform() === "win32") return "interception";
+  else if(os.platform() === "linux") return "grabzorro";
+  return "";
+};
+
+Core.lowerPrivileges = function() {
+  return new Promise((resolve, reject) => {
+    if(os.platform() === "win32") {
+      resolve();
+      return;
+    }
+    else {
+      fs.readFile(this.dirs.electronRoot + "/user.json", (err, data) => {
+        if(err) {
+          reject(err);
+        }
+        else {
+          let user = JSON.parse(data.toString());
+          try {
+            process.setgid(user.group);
+            process.setuid(user.name);
+            console.log("Successfully dropped privileges");
+            resolve();
+          }
+          catch(err) {
+            console.error("Couldn't drop privileges! Be very careful!");
+            reject();
+          }
+        }
+      });
+    }
+  });
+};
+
+Core.sendLowerPrivileges = function() {
+  ipcRenderer.send("lowerprivileges");
+};
 
 
 //-------------------------------------------------------------------
@@ -681,6 +825,7 @@ ipcRenderer.on("core", function(event, args) {
         break;
       case "BASEDATA":
         Core.baseData = args[0];
+        Core.dirs = Core.baseData.dirs;
         Core.start();
         break;
     }

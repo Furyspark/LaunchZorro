@@ -80,13 +80,32 @@ Profile.prototype.handleInterception = function(keyCode, keyDown, keyE0, hwid, k
   return false;
 }
 
+Profile.prototype.handleGrabZorro = function(keyName, value, info, hwid) {
+  let deviceNames = this.checkWhitelist(hwid);
+  let bind = this.getBind(deviceNames, keyName);
+  let keyDown = (value === EvDevDict.values.key.pressed);
+  if(bind != null) {
+    // Key DOWN
+    if(keyDown) {
+      this.pressBind(bind);
+      return true;
+    }
+    // Key UP
+    else {
+      this.releaseBind(bind);
+      return true;
+    }
+  }
+  return false;
+};
+
 Profile.prototype.shouldHandle = function(keyName, hwid, deviceType, config) {
   if(this.suspended()) return false;
-  var deviceNames = this.checkWhitelist(hwid);
+  let deviceNames = this.checkWhitelist(hwid);
   if(this.usingWhitelist() && !config.ignoreWhitelist) {
     if(!this.isOnWhitelist(deviceNames)) return false;
   }
-  var bind = this.getBind(deviceNames, keyName);
+  let bind = this.getBind(deviceNames, keyName);
   if(!bind) {
     if(this.enableDefaults()) return false;
     if(deviceType === Core.DEVICE_TYPE_MOUSE) return false;
@@ -110,10 +129,11 @@ Profile.prototype.enableDefaults = function() {
 }
 
 Profile.prototype.checkWhitelist = function(hwid) {
-  var result = ["any"];
+  let result = ["any"];
   if(this._whitelistLoading) return [];
-  for(var a in this._whitelist) {
-    var obj = this._whitelist[a];
+  for(let a in this._whitelist) {
+    let handlerName = Core.getHandlerName();
+    let obj = this._whitelist[a][handlerName] || [];
     if(obj.indexOf(hwid) !== -1) result.push(a);
   }
   return result;

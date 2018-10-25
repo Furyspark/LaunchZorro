@@ -41,7 +41,7 @@ Categories.add = function(name) {
 };
 
 Categories.iconPath = function() {
-  return Core.baseData.baseDir + "/icons/categories/";
+  return Core.dirs.appData + "/icons/categories/";
 };
 
 Categories.refresh = function() {
@@ -93,7 +93,7 @@ Categories.selectElem = function(elem) {
 Categories.baseDir = function() {
   var mouseDir = Core.devices.mice[Core.MouseElement().value].dirName;
   var lhcDir = Core.devices.lhc[Core.LHCElement().value].dirName;
-  return Core.baseData.baseDir + "/profiles/" + mouseDir + "/" + lhcDir + "/";
+  return Core.dirs.appData + "/profiles/" + mouseDir + "/" + lhcDir + "/";
 };
 
 Categories.onSelect = function() {

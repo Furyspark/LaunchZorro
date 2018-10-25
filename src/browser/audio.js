@@ -3,7 +3,7 @@ var Audio = {};
 Audio._sounds = {};
 
 Audio.addSound = function(key, filePath) {
-  this._sounds[key] = new Wad({source: filePath});
+  this._sounds[key] = new Howl({src: [filePath]});
 };
 
 Audio.play = function(key) {

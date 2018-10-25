@@ -1,8 +1,10 @@
+var os = require("os");
 var fs = require("fs");
-var path = require("path");
+var path = nodePath = require("path");
 var spawn = require("child_process").spawn;
 var exec = require("child_process").execFile;
 var interceptionJS;
+var grabzorro;
 var processType = "electron";
 var electron = require("electron");
 var ipcRenderer = electron.ipcRenderer;

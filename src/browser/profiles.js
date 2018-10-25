@@ -59,7 +59,7 @@ Profiles.add = function(name) {
 };
 
 Profiles.iconPath = function(category) {
-  return Core.baseData.baseDir + "/icons/profiles/" + category + "/";
+  return Core.dirs.appData + "/icons/profiles/" + category + "/";
 };
 
 Profiles.refresh = function() {
@@ -132,7 +132,7 @@ Profiles.baseDir = function() {
   var catElem = Categories.getSelected();
   if(catElem) {
     var catDir = catElem.value;
-    return Core.baseData.baseDir + "/profiles/" + mouseDir + "/" + lhcDir + "/" + catDir + "/";
+    return Core.dirs.appData + "/profiles/" + mouseDir + "/" + lhcDir + "/" + catDir + "/";
   }
   return "";
 };
@@ -164,7 +164,7 @@ Profiles.loadProfile = function(url) {
     lhc = dirs[1];
     category = dirs[2];
     profileName = dirs[3];
-    var profilePath = Core.baseData.baseDir + "/profiles/" + url + ".json";
+    var profilePath = Core.dirs.appData + "/profiles/" + url + ".json";
     this.profile = new Profile(profilePath);
   }
   if(!this.profile) return;

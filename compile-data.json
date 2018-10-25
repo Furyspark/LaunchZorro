@@ -8,6 +8,7 @@
 
       "input.js",
       "core.js",
+      "evdevdict.js",
 
       "keymap.js",
       "bind.js",
@@ -21,6 +22,8 @@
       "audio.js",
 
       "overwolf.js",
+
+      "../shared/keycode-translator.js",
 
       "footer.js"
     ],
@@ -43,6 +46,8 @@
       "classes/bind.js",
       "classes/button_layout.js",
       "classes/button.js",
+
+      "../shared/keycode-translator.js",
 
       "footer.js"
     ],

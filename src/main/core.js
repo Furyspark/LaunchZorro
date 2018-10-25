@@ -1,11 +1,21 @@
 function Core() {}
 
+Core.dirs = {
+  appRoot: app.getAppPath(),
+  electronRoot: nodePath.resolve("."),
+  appData: os.platform() === "win32" ? process.env.APPDATA + "/zorro" : nodePath.resolve(".")
+};
+
 Core.start = function() {
-  this.recentProfiles = [];
-  this._windows = {};
-  this.initFileStructure(errors => {
-    if(errors.length > 0) console.log(errors);
-    else Core.postStart();
+  ConfigManager.load()
+  .catch((err) => { console.error(err); })
+  .then(() => {
+    this.recentProfiles = [];
+    this._windows = {};
+    this.initFileStructure(errors => {
+      if(errors.length > 0) console.log(errors);
+      else Core.postStart();
+    });
   });
 };
 
@@ -18,12 +28,12 @@ Core.initFileStructure = function(callback) {
     if(tasks === 0) callback(errors);
   };
   // Copy base whitelist
-  Core.copyFile(nodePath.join(__dirname, "whitelist.json"), nodePath.join(baseDir, "whitelist.json"), true, err => {
+  Core.copyFile(nodePath.join(__dirname, "whitelist.json"), nodePath.join(Core.dirs.appData, "whitelist.json"), true, err => {
     if(err) taskDone(err);
     else taskDone();
   });
   // Copy base icons
-  ncp(__dirname + "/baseicons", baseDir + "/icons", err => {
+  ncp(__dirname + "/baseicons", Core.dirs.appData + "/icons", err => {
     if(err) taskDone(err);
     else taskDone();
   });
@@ -57,7 +67,6 @@ Core.copyFile = function(src, dest, overwrite, callback) {
 
 Core.postStart = function() {
   this.createWindow("browser");
-  this.createTray();
 
   app.on("window-all-closed", function() {
     if(process.platform !== "darwin") {
@@ -90,7 +99,7 @@ Core.createWindow = function(type) {
     let win = this._windows[type] = new BrowserWindow(this.getWindowBaseProperties(type));
 
     // Load URL
-    win.loadURL(this.getWindowURL(type));
+    win.loadFile(this.getWindowURL(type));
     win.setMenu(null);
 
     // Configure window
@@ -142,13 +151,13 @@ Core.getWindowBaseProperties = function(type) {
 Core.getWindowURL = function(type) {
   switch(type) {
     case "browser":
-      return nodePath.join(__dirname, "windows/browser", "index.html");
+      return nodePath.join(this.dirs.appRoot, "windows/browser", "index.html");
       break;
     case "editor":
-      return nodePath.join(__dirname, "windows/editor", "index.html");
+      return nodePath.join(this.dirs.appRoot, "windows/editor", "index.html");
       break;
     case "extendedBind":
-      return nodePath.join(__dirname, "windows/editor", "extended.html");
+      return nodePath.join(this.dirs.appRoot, "windows/editor", "extended.html");
       break;
   }
 };
@@ -201,12 +210,13 @@ Core.configureWindow = function(win, type) {
 Core.getBaseData = function() {
   return {
     baseDir: baseDir,
-    rootDir: __dirname
+    rootDir: __dirname,
+    dirs: this.dirs
   };
 };
 
 Core.createTray = function() {
-  this.tray = new Tray(__dirname + "/profiler.png");
+  this.tray = new Tray(this.dirs.electronRoot + "/profiler.png");
   this.tray.setToolTip("Zorro");
   this.tray.setContextMenu(this.generateTrayMenu());
   this.tray.on("double-click", function() { Core.createWindow("browser"); }.bind(this));
@@ -250,3 +260,32 @@ Core.generateTrayMenu = function() {
   ]);
   return menu;
 }
+
+Core.lowerPrivileges = function() {
+  return new Promise((resolve, reject) => {
+    if(os.platform() === "win32") {
+      resolve();
+      return;
+    }
+    else {
+      fs.readFile(this.dirs.electronRoot + "/user.json", (err, data) => {
+        if(err) {
+          reject(err);
+        }
+        else {
+          let user = JSON.parse(data.toString());
+          try {
+            process.setgid(user.group);
+            process.setuid(user.name);
+            console.log("Successfully dropped privileges");
+            resolve();
+          }
+          catch(err) {
+            console.error("Couldn't drop privileges! Be very careful!");
+            reject();
+          }
+        }
+      });
+    }
+  });
+};

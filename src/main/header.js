@@ -1,6 +1,7 @@
 var debugMode = false;
 
 let fs = require("fs");
+let os = require("os");
 let nodePath = require("path");
 var ncp = require("ncp").ncp;
 

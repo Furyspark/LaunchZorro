@@ -59,3 +59,11 @@ ipcMain.on("extended", function(event, args) {
     }
   }
 });
+
+ipcMain.on("lowerprivileges", (ev) => {
+  Core.lowerPrivileges()
+  .catch((err) => { console.error(err); })
+  .then(() => {
+    Core.createTray();
+  });
+});

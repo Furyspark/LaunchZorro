@@ -66,37 +66,59 @@ Sequence.prototype.continue = function() {
   var action = this._actions[this._index];
   this._index++;
   var instantContinue = true;
+  let handlerName = Core.getHandlerName();
   if(action) {
     var details = action.get();
     switch(details.type) {
       case "key":
         // Mouse wheel
         if(details.name === "mousewheelup") {
-          if(details.down) this.core().send("mousewheel", true, 0, 100);
+          if(details.down) {
+            if(handlerName === "interception")
+              this.core().send("mousewheel", true, 0, 100);
+            else if(handlerName === "grabzorro")
+              this.core().send(EvDevDict.events.rel, EvDevDict.codes.rel.rel_y, 1);
+          }
         }
         else if(details.name === "mousewheeldown") {
-          if(details.down) this.core().send("mousewheel", true, 0, -100);
+          if(details.down) {
+            if(handlerName === "interception")
+              this.core().send("mousewheel", true, 0, -100);
+            else if(handlerName === "grabzorro")
+              this.core().send(EvDevDict.events.rel, EvDevDict.codes.rel.rel_y, -1);
+          }
         }
         // Keys
         else {
+          let evdevCode = KeyCodeTranslator.toLinux(details.name);
+          let evdevValue = details.down ? EvDevDict.values.key.pressed : EvDevDict.values.key.released;
           if(Input.isMouseString(details.name)) {
             // Mouse function already held
             if(this.profile()._mouseFuncHeld.indexOf(details.name) !== -1) {
               if(!details.down) {
                 this.profile()._mouseFuncHeld.splice(this.profile()._mouseFuncHeld.indexOf(details.name), 1);
-                this.core().send(details.name, details.down);
+                if(handlerName === "interception")
+                  this.core().send(details.name, details.down);
+                else if(handlerName === "grabzorro")
+                  this.core().send(EvDevDict.events.key, evdevCode, evdevValue);
               }
             }
             // Mouse function not yet held
             else {
               if(details.down) {
                 this.profile()._mouseFuncHeld.push(details.name);
-                this.core().send(details.name, details.down);
+                if(handlerName === "interception")
+                  this.core().send(details.name, details.down);
+                else if(handlerName === "grabzorro")
+                  this.core().send(EvDevDict.events.key, evdevCode, evdevValue);
               }
             }
           }
           else {
-            this.core().send(details.name, details.down);
+            if(handlerName === "interception")
+              this.core().send(details.name, details.down);
+            else if(handlerName === "grabzorro")
+              this.core().send(EvDevDict.events.key, evdevCode, evdevValue);
           }
           if(details.down && this._keysDown.indexOf(details.name) === -1) {
             this._keysDown.push(details.name);
