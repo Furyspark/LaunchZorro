@@ -3,7 +3,7 @@ var debugMode = false;
 let fs = require("fs");
 let os = require("os");
 let nodePath = require("path");
-var ncp = require("ncp").ncp;
+let ncp = require("ncp").ncp;
 
 var electron = require("electron");
 var app = electron.app;
@@ -89,30 +89,7 @@ Core.start = function() {
   .then(() => {
     this.recentProfiles = [];
     this._windows = {};
-    this.initFileStructure(errors => {
-      if(errors.length > 0) console.log(errors);
-      else Core.postStart();
-    });
-  });
-};
-
-Core.initFileStructure = function(callback) {
-  let tasks = 2;
-  let errors = [];
-  let taskDone = function(err) {
-    tasks--;
-    if(err) errors.push(err);
-    if(tasks === 0) callback(errors);
-  };
-  // Copy base whitelist
-  Core.copyFile(nodePath.join(__dirname, "whitelist.json"), nodePath.join(Core.dirs.appData, "whitelist.json"), true, err => {
-    if(err) taskDone(err);
-    else taskDone();
-  });
-  // Copy base icons
-  ncp(__dirname + "/baseicons", Core.dirs.appData + "/icons", err => {
-    if(err) taskDone(err);
-    else taskDone();
+    Core.postStart();
   });
 };
 

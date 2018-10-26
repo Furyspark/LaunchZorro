@@ -1,17 +1,18 @@
-var os = require("os");
-var fs = require("fs");
-var path = nodePath = require("path");
-var spawn = require("child_process").spawn;
-var exec = require("child_process").execFile;
-var interceptionJS;
-var grabzorro;
-var processType = "electron";
-var electron = require("electron");
-var ipcRenderer = electron.ipcRenderer;
-var SocketIOServer = require("socket.io");
-var $ = jQuery = require("jquery");
+let os = require("os");
+let fs = require("fs");
+let path = nodePath = require("path");
+let spawn = require("child_process").spawn;
+let exec = require("child_process").execFile;
+let interceptionJS;
+let grabzorro;
+let processType = "electron";
+let electron = require("electron");
+let ipcRenderer = electron.ipcRenderer;
+let SocketIOServer = require("socket.io");
+let $ = jQuery = require("jquery");
+let ncp = require("ncp").ncp;
 
-var cmdArgs = {
+let cmdArgs = {
   lhc: "",
   mouse: "",
   category: "",

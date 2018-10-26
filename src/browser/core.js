@@ -65,7 +65,32 @@ Core.start = function() {
   this.lowerPrivileges()
   .catch((err) => { console.error(err); })
   .then(() => {
-    this.postStart();
+    this.initFileStructure()
+    .then((errors) => {
+      this.postStart();
+    });
+  });
+};
+
+Core.initFileStructure = function() {
+  return new Promise((resolve) => {
+    let tasks = 2;
+    let errors = [];
+    let taskDone = function(err) {
+      tasks--;
+      if(err) errors.push(err);
+      if(tasks === 0) resolve(errors);
+    };
+    // Copy base whitelist
+    Core.copyFile(nodePath.join(Core.dirs.appRoot, "whitelist.json"), nodePath.join(Core.dirs.appData, "whitelist.json"), true, err => {
+      if(err) taskDone(err);
+      else taskDone();
+    });
+    // Copy base icons
+    ncp(Core.dirs.appRoot + "/baseicons", Core.dirs.appData + "/icons", err => {
+      if(err) taskDone(err);
+      else taskDone();
+    });
   });
 };
 
@@ -132,6 +157,32 @@ Core.postStart = function() {
   Audio.addSound("deactivate_profile", this.dirs.appRoot + "/assets/audio/deactivate_profile.wav");
 
   // Core.setPriority();
+};
+
+Core.copyFile = function(src, dest, overwrite, callback) {
+  fs.readFile(src, (err, data) => {
+    if(err) callback(err);
+    fs.stat(dest, (err, stat) => {
+      if(err && err.code !== "ENOENT") callback(err);
+      else if(err && err.code === "ENOENT") {
+        fs.writeFile(dest, data, (err) => {
+          if(err) callback(err);
+          callback();
+        });
+      }
+      else {
+        if(err && err.code === "ENOENT" && overwrite) {
+          fs.writeFile(dest, data, (err) => {
+            if(err) callback(err);
+            callback();
+          });
+        }
+        else {
+          callback();
+        }
+      }
+    });
+  });
 };
 
 Core.loadConfig = function() {
@@ -477,7 +528,7 @@ Core.detectRunning = function() {
 Core.handleGrabZorro = function(ev, code, value, info) {
   let hwid = info.idVendor + ":" + info.idProduct;
   let sendDefault = true;
-  if(ev === EvDevDict.events.key) {
+  if(ev === EvDevDict.events.key && value >= 0 && value <= 1) {
     let keyDown = (value == EvDevDict.values.key.pressed);
     let keyName = KeyCodeTranslator.fromLinux(code);
     let deviceType = EvDevDict.isMouseButton(code) ? Core.DEVICE_TYPE_MOUSE : Core.DEVICE_TYPE_KEYBOARD;
@@ -508,12 +559,12 @@ Core.handleGrabZorro = function(ev, code, value, info) {
     }
     if(!overriden && this._globalProfile != null && this._globalProfile.shouldHandle(keyName, hwid, deviceType, {})) {
       sendDefault = false;
-      overriden = prof.isOverriding(keyName, hwid);
+      overriden = this._globalProfile.isOverriding(keyName, hwid);
       this._globalProfile.handleGrabZorro(keyName, value, info, hwid);
     }
-    if(!overriden && this._superGlobalProfile != null && this._superGlobalProfile.shouldHandle(keyName, hwid, deviceType, {})) {
+    if(!overriden && this._superGlobalProfile != null && this._superGlobalProfile.shouldHandle(keyName, hwid, deviceType, { ignoreWhitelist: true })) {
       sendDefault = false;
-      overriden = prof.isOverriding(keyName, hwid);
+      overriden = this._superGlobalProfile.isOverriding(keyName, hwid);
       this._superGlobalProfile.handleGrabZorro(keyName, value, info, hwid);
     }
   }
