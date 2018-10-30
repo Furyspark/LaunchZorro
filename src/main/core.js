@@ -96,6 +96,17 @@ Core.createWindow = function(type) {
   return undefined;
 };
 
+Core.centerWindow = function(win) {
+  let screen = require("electron").screen;
+  let display = screen.getPrimaryDisplay();
+  let workArea = display.workArea;
+  let winSize = win.getSize();
+  win.setPosition(
+    Math.floor(workArea.x + workArea.width / 2 - winSize[0] / 2),
+    Math.floor(workArea.y + workArea.height / 2 - winSize[1] / 2)
+  );
+};
+
 Core.getWindowBaseProperties = function(type) {
   let result = {};
 
@@ -146,6 +157,7 @@ Core.configureWindow = function(win, type) {
       if(!ConfigManager._config.startMinimized) {
         win.once("ready-to-show", function() {
           win.show();
+          // this.centerWindow(win);
           win.maximize();
           if(this.isDebugMode()) win.webContents.openDevTools({ mode: "detach" });
         }.bind(this));

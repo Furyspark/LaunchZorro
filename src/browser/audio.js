@@ -7,7 +7,7 @@ Audio.addSound = function(key, filePath) {
 };
 
 Audio.play = function(key) {
-  var snd = this._sounds[key];
+  let snd = this._sounds[key];
   if(snd) {
     snd.play();
   }
