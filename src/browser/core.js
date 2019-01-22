@@ -561,7 +561,7 @@ Core.handleGrabZorro = function(events, info) {
     let ev = events[a];
     
     if(ev.type === EvDevDict.events.key) {
-      let keyDown = (ev.value === EvDevDict.values.key.pressed);
+      let keyDown = (ev.value !== EvDevDict.values.key.released);
       let keyName = KeyCodeTranslator.fromLinux(ev.code);
       let deviceType = EvDevDict.isMouseButton(ev.code) ? Core.DEVICE_TYPE_MOUSE : Core.DEVICE_TYPE_KEYBOARD;
       let prof = Profiles.profile;

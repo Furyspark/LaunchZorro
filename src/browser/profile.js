@@ -83,7 +83,7 @@ Profile.prototype.handleInterception = function(keyCode, keyDown, keyE0, hwid, k
 Profile.prototype.handleGrabZorro = function(keyName, value, info, hwid) {
   let deviceNames = this.checkWhitelist(hwid);
   let bind = this.getBind(deviceNames, keyName);
-  let keyDown = (value === EvDevDict.values.key.pressed);
+  let keyDown = (value !== EvDevDict.values.key.released);
   if(bind != null) {
     // Key DOWN
     if(keyDown) {

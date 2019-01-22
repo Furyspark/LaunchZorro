@@ -161,6 +161,7 @@ KeyCodeTranslator.initialize = function() {
     "vkdc": 43,
     "vkde": 40,
     "enter": 28,
+    "vkba": 39,
     "vkbc": 51,
     "vkbe": 52,
     "vkbf": 53,
