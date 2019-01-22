@@ -9,7 +9,7 @@
     "email": "mikauschekzen@gmail.com"
   },
   "scripts": {
-    "test": "gulp && sudo electron . --debug",
+    "test": "gulp && electron . --debug",
     "test-normal": "gulp && electron . --debug",
     "test-cmd": "node compile.js && electron . --debug --mouse=normal --lhc=normal --category=\"MMO\" --profile=\"World of Warcraft\"",
     "dist": "node compile.js",
@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "concatenate-files": "^0.1.1",
-    "electron": "^3.0.5",
+    "electron": "^4.0.1",
     "electron-builder": "^19.43.0",
     "electron-packager": "^9.1.0",
     "gulp": "^3.9.1",

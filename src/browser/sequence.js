@@ -67,6 +67,7 @@ Sequence.prototype.continue = function() {
   this._index++;
   var instantContinue = true;
   let handlerName = Core.getHandlerName();
+  let result = false;
   if(action) {
     var details = action.get();
     switch(details.type) {
@@ -76,16 +77,28 @@ Sequence.prototype.continue = function() {
           if(details.down) {
             if(handlerName === "interception")
               this.core().send("mousewheel", true, 0, 100);
-            else if(handlerName === "grabzorro")
-              this.core().send(EvDevDict.events.rel, EvDevDict.codes.rel.rel_y, 1);
+            else if(handlerName === "grabzorro") {
+              let events = [{
+                type: EvDevDict.events.rel,
+                code: EvDevDict.codes.rel.rel_y,
+                value: 1
+              }];
+              result = Core.handler.libevdev_send_events(Core._virtDevIndex, events);
+            }
           }
         }
         else if(details.name === "mousewheeldown") {
           if(details.down) {
             if(handlerName === "interception")
               this.core().send("mousewheel", true, 0, -100);
-            else if(handlerName === "grabzorro")
-              this.core().send(EvDevDict.events.rel, EvDevDict.codes.rel.rel_y, -1);
+            else if(handlerName === "grabzorro") {
+              let events = [{
+                type: EvDevDict.events.rel,
+                code: EvDevDict.codes.rel.rel_y,
+                value: -1
+              }];
+              result = Core.handler.libevdev_send_events(Core._virtDevIndex, events);
+            }
           }
         }
         // Keys
@@ -99,8 +112,14 @@ Sequence.prototype.continue = function() {
                 this.profile()._mouseFuncHeld.splice(this.profile()._mouseFuncHeld.indexOf(details.name), 1);
                 if(handlerName === "interception")
                   this.core().send(details.name, details.down);
-                else if(handlerName === "grabzorro")
-                  this.core().send(EvDevDict.events.key, evdevCode, evdevValue);
+                else if(handlerName === "grabzorro") {
+                  let events = [{
+                    type: EvDevDict.events.key,
+                    code: evdevCode,
+                    value: evdevValue
+                  }];
+                  result = Core.handler.libevdev_send_events(Core._virtDevIndex, events);
+                }
               }
             }
             // Mouse function not yet held
@@ -109,16 +128,28 @@ Sequence.prototype.continue = function() {
                 this.profile()._mouseFuncHeld.push(details.name);
                 if(handlerName === "interception")
                   this.core().send(details.name, details.down);
-                else if(handlerName === "grabzorro")
-                  this.core().send(EvDevDict.events.key, evdevCode, evdevValue);
+                else if(handlerName === "grabzorro") {
+                  let events = [{
+                    type: EvDevDict.events.key,
+                    code: evdevCode,
+                    value: evdevValue
+                  }];
+                  result = Core.handler.libevdev_send_events(Core._virtDevIndex, events);
+                }
               }
             }
           }
           else {
             if(handlerName === "interception")
               this.core().send(details.name, details.down);
-            else if(handlerName === "grabzorro")
-              this.core().send(EvDevDict.events.key, evdevCode, evdevValue);
+            else if(handlerName === "grabzorro") {
+              let events = [{
+                type: EvDevDict.events.key,
+                code: evdevCode,
+                value: evdevValue
+              }];
+              result = Core.handler.libevdev_send_events(Core._virtDevIndex, events);
+            }
           }
           if(details.down && this._keysDown.indexOf(details.name) === -1) {
             this._keysDown.push(details.name);

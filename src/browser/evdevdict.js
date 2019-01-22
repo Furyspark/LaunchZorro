@@ -10,12 +10,17 @@ EvDevDict.initialize = function() {
 };
 
 EvDevDict.events = {
+  syn: 0x00,
   key: 0x01,
   rel: 0x02,
   abs: 0x03
 };
 
 EvDevDict.codes = {
+  // For EV_SYN
+  syn: {
+    syn_report: 0
+  },
   // For EV_REL
   rel: {
     rel_x: 0x00,

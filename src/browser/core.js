@@ -49,27 +49,49 @@ Core.start = function() {
     interceptionJS = require(this.dirs.appRoot + "/interception/interception");
   }
   else {
-    grabzorro = require(this.dirs.appRoot + "/grabzorro/grabzorro");
+    grabzorro = require(this.dirs.appRoot + "/grabzorro/node-libevdev");
   }
 
+  // Set up for Windows
   if(os.platform() === "win32") {
     Core.handler = interceptionJS();
     Core.handler.start(Core.handleInterception.bind(Core));
   }
-  else {
+  // Set up for Linux
+  else if(os.platform() === "linux") {
     Core.handler = grabzorro;
-    Core.handler.start(Core.handleGrabZorro.bind(Core));
+
+    // Set up filter
+    let filter = [
+      "ID_INPUT_KEYBOARD",
+      "ID_INPUT_MOUSE"
+    ];
+
+    // Get devices
+    let devices = Core.handler.get_device_paths(filter);
+    let devPaths = devices.map((obj) => { return obj.node_path; });
+
+    // Create virtual device
+    Core._virtDevIndex = Core.handler.libevdev_create_virtual_device();
+
+    // Read from devices
+    Core.handler.read_devices(
+      devPaths,
+      true,
+      Core.handleGrabZorro.bind(Core),
+      Core.endGrabZorro.bind(Core)
+    );
   }
 
-  this.sendLowerPrivileges();
-  this.lowerPrivileges()
-  .catch((err) => { console.error(err); })
-  .then(() => {
+  //this.sendLowerPrivileges();
+  //this.lowerPrivileges()
+  //.catch((err) => { console.error(err); })
+  //.then(() => {
     this.initFileStructure()
     .then((errors) => {
       this.postStart();
     });
-  });
+  //});
 };
 
 Core.initFileStructure = function() {
@@ -525,58 +547,72 @@ Core.detectRunning = function() {
   });
 }
 
-Core.handleGrabZorro = function(ev, code, value, info) {
-  let hwid = info.idVendor + ":" + info.idProduct;
-  let sendDefault = true;
-  if(ev === EvDevDict.events.key && value >= 0 && value <= 1) {
-    let keyDown = (value == EvDevDict.values.key.pressed);
-    let keyName = KeyCodeTranslator.fromLinux(code);
-    let deviceType = EvDevDict.isMouseButton(code) ? Core.DEVICE_TYPE_MOUSE : Core.DEVICE_TYPE_KEYBOARD;
-    let prof = Profiles.profile;
-    let overriden = false;
+Core.handleGrabZorroTemp = function(ev, code, value, data, info) {
+  let hwid = info.vendor_id + ":" + info.product_id;
+  //console.log(hwid);
+  let result = this.handler.libevdev_send_event(this._virtDevIndex, ev, code, value);
+};
 
-    // Wait for whitelist
-    if(this._waitForWhitelistKey) {
-      sendDefault = false;
-      this._waitForWhitelistKey = false;
-      this.addToWhitelist(null, this.getHandlerName(), hwid);
-      this.onSelectWhitelistDevice();
-      this.saveWhitelist();
-      this.clearCoreMessage();
-    }
-    // Suspend profile
-    else if(prof != null && keyName === this.conf.suspend_key) {
-      sendDefault = false;
-      if(keyDown) {
-        prof.toggleSuspend();
+Core.handleGrabZorro = function(events, info) {
+  let hwid = info.vendor_id + ":" + info.product_id;
+
+  // Loop to alter events
+  for(let a = 0;a < events.length;a++) {
+    let ev = events[a];
+    
+    if(ev.type === EvDevDict.events.key) {
+      let keyDown = (ev.value === EvDevDict.values.key.pressed);
+      let keyName = KeyCodeTranslator.fromLinux(ev.code);
+      let deviceType = EvDevDict.isMouseButton(ev.code) ? Core.DEVICE_TYPE_MOUSE : Core.DEVICE_TYPE_KEYBOARD;
+      let prof = Profiles.profile;
+      let overridden = false;
+
+      // Wait for whitelist
+      if(Core._waitForWhitelistKey) {
+        events.splice(a, 1);
+        a--;
+        Core._waitForWhitelistKey = false;
+        Core.addToWhitelist(null, Core.getHandlerName(), hwid);
+        Core.onSelectWhitelistDevice();
+        Core.saveWhitelist();
+        Core.clearCoreMessage();
+      }
+
+      // Suspend profile
+      else if(prof != null && keyName === Core.conf.suspend_key) {
+        events.splice(a, 1);
+        a--;
+        if(keyDown) {
+          prof.toggleSuspend();
+        }
+      }
+
+      if(!overridden && prof != null && prof.shouldHandle(keyName, hwid, deviceType, {})) {
+        events.splice(a, 1);
+        a--;
+        overridden = prof.isOverriding(keyName, hwid);
+        prof.handleGrabZorro(keyName, ev.value, info, hwid);
+      }
+      if(!overridden && Core._globalProfile != null && Core._globalProfile.shouldHandle(keyName, hwid, deviceType, {})) {
+        events.splice(a, 1);
+        a--;
+        overridden = Core._globalProfile.isOverriding(keyName, hwid);
+        Core._globalProfile.handleGrabZorro(keyName, ev.value, info, hwid);
+      }
+      if(!overridden && Core._superGlobalProfile != null && Core._superGlobalProfile.shouldHandle(keyName, hwid, deviceType, { ignoreWhitelist: true })) {
+        events.splice(a, 1);
+        a--;
+        overridden = Core._superGlobalProfile.isOverriding(keyName, hwid);
+        Core._superGlobalProfile.handleGrabZorro(keyName, ev.value, info, hwid);
       }
     }
-
-    if(!overriden && prof != null && prof.shouldHandle(keyName, hwid, deviceType, {})) {
-      sendDefault = false;
-      overriden = prof.isOverriding(keyName, hwid);
-      prof.handleGrabZorro(keyName, value, info, hwid);
-    }
-    if(!overriden && this._globalProfile != null && this._globalProfile.shouldHandle(keyName, hwid, deviceType, {})) {
-      sendDefault = false;
-      overriden = this._globalProfile.isOverriding(keyName, hwid);
-      this._globalProfile.handleGrabZorro(keyName, value, info, hwid);
-    }
-    if(!overriden && this._superGlobalProfile != null && this._superGlobalProfile.shouldHandle(keyName, hwid, deviceType, { ignoreWhitelist: true })) {
-      sendDefault = false;
-      overriden = this._superGlobalProfile.isOverriding(keyName, hwid);
-      this._superGlobalProfile.handleGrabZorro(keyName, value, info, hwid);
-    }
   }
 
-  // Send default stuff
-  if(sendDefault) {
-    // Quick and dirty personal workaround for capslock
-    if(code === EvDevDict.codes.key.key_capslock) {
-      code = EvDevDict.codes.key.key_f14;
-    }
-    Core.handler.send(ev, code, value);
-  }
+  // Send events
+  Core.handler.libevdev_send_events(Core._virtDevIndex, events);
+};
+
+Core.endGrabZorro = function() {
 };
 
 Core.handleInterception = function(keyCode, keyDown, keyE0, hwid, deviceType, mouseWheel, mouseMove, x, y) {

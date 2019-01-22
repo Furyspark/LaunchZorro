@@ -43,6 +43,8 @@ Core.copyFile = function(src, dest, overwrite, callback) {
 };
 
 Core.postStart = function() {
+  this.createTray();
+
   this.createWindow("browser");
 
   app.on("window-all-closed", function() {
